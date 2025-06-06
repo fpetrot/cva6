@@ -62,8 +62,8 @@ module perf_counters
 
   typedef logic [11:0] csr_addr_t;
 
-  logic [63:0] generic_counter_d[MHPMCounterNum:1];
-  logic [63:0] generic_counter_q[MHPMCounterNum:1];
+  logic [127:0] generic_counter_d[MHPMCounterNum:1];
+  logic [127:0] generic_counter_q[MHPMCounterNum:1];
 
   //internal signal to keep track of exception
   logic read_access_exception, update_access_exception;
@@ -158,6 +158,8 @@ module perf_counters
     if( (addr_i >= csr_addr_t'(riscv::CSR_MHPM_COUNTER_3)) && (addr_i < ( csr_addr_t'(riscv::CSR_MHPM_COUNTER_3) + MHPMCounterNum)) ) begin
       if (riscv::XLEN == 32) begin
         data_o = generic_counter_q[addr_i-riscv::CSR_MHPM_COUNTER_3+1][31:0];
+      end else if (riscv::XLEN == 64) begin
+        data_o = generic_counter_q[addr_i-riscv::CSR_MHPM_COUNTER_3+1][63:0];
       end else begin
         data_o = generic_counter_q[addr_i-riscv::CSR_MHPM_COUNTER_3+1];
       end
@@ -172,6 +174,8 @@ module perf_counters
     end else if( (addr_i >= csr_addr_t'(riscv::CSR_HPM_COUNTER_3)) && (addr_i < (csr_addr_t'(riscv::CSR_HPM_COUNTER_3) + MHPMCounterNum)) ) begin
       if (riscv::XLEN == 32) begin
         data_o = generic_counter_q[addr_i-riscv::CSR_HPM_COUNTER_3+1][31:0];
+      end else if (riscv::XLEN == 64) begin
+        data_o = generic_counter_q[addr_i-riscv::CSR_HPM_COUNTER_3+1][63:0];
       end else begin
         data_o = generic_counter_q[addr_i-riscv::CSR_HPM_COUNTER_3+1];
       end
@@ -188,6 +192,8 @@ module perf_counters
       if( (addr_i >= csr_addr_t'(riscv::CSR_MHPM_COUNTER_3)) && (addr_i < (csr_addr_t'(riscv::CSR_MHPM_COUNTER_3) + MHPMCounterNum)) ) begin
         if (riscv::XLEN == 32) begin
           generic_counter_d[addr_i-riscv::CSR_MHPM_COUNTER_3+1][31:0] = data_i;
+        end else if (riscv::XLEN == 64) begin
+          generic_counter_d[addr_i-riscv::CSR_MHPM_COUNTER_3+1][63:0] = data_i;
         end else begin
           generic_counter_d[addr_i-riscv::CSR_MHPM_COUNTER_3+1] = data_i;
         end

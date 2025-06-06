@@ -197,9 +197,9 @@ module load_unit
   assign req_port_o.data_we = 1'b0;
   assign req_port_o.data_wdata = '0;
   // compose the load buffer write data, control is handled in the FSM
-  assign ldbuf_wdata = {
-    lsu_ctrl_i.trans_id, lsu_ctrl_i.vaddr[CVA6Cfg.XLEN_ALIGN_BYTES-1:0], lsu_ctrl_i.operation
-  };
+  assign ldbuf_wdata.trans_id = lsu_ctrl_i.trans_id;
+  assign ldbuf_wdata.address_offset = (lsu_ctrl_i.vaddr[CVA6Cfg.XLEN_ALIGN_BYTES-1:0] == (CVA6Cfg.XLEN / 8)) ? 0 : lsu_ctrl_i.vaddr[CVA6Cfg.XLEN_ALIGN_BYTES-1:0];
+  assign ldbuf_wdata.operation = lsu_ctrl_i.operation;
   // output address
   // we can now output the lower 12 bit as the index to the cache
   assign req_port_o.address_index = lsu_ctrl_i.vaddr[CVA6Cfg.DCACHE_INDEX_WIDTH-1:0];
@@ -222,7 +222,7 @@ module load_unit
   logic inflight_stores;
   logic stall_ni;
   assign paddr_ni = config_pkg::is_inside_nonidempotent_regions(
-      CVA6Cfg, {{52 - CVA6Cfg.PPNW{1'b0}}, dtlb_ppn_i, 12'd0}
+      CVA6Cfg, {{116 - CVA6Cfg.PPNW{1'b0}}, dtlb_ppn_i, 12'd0}
   );
   assign not_commit_time = commit_tran_id_i != lsu_ctrl_i.trans_id;
   assign inflight_stores = (!dcache_wbuffer_not_ni_i || !store_buffer_empty_i);
@@ -492,9 +492,10 @@ module load_unit
 
 
   // prepare these signals for faster selection in the next cycle
-  assign rdata_is_signed    =   ldbuf_rdata.operation inside {ariane_pkg::LW,  ariane_pkg::LH,  ariane_pkg::LB, ariane_pkg::HLV_W, ariane_pkg::HLV_H, ariane_pkg::HLV_B};
+  assign rdata_is_signed    =   ldbuf_rdata.operation inside {ariane_pkg::LD, ariane_pkg::LW,  ariane_pkg::LH,  ariane_pkg::LB, ariane_pkg::HLV_W, ariane_pkg::HLV_H, ariane_pkg::HLV_B};
   assign rdata_is_fp_signed =   ldbuf_rdata.operation inside {ariane_pkg::FLW, ariane_pkg::FLH, ariane_pkg::FLB};
-  assign rdata_offset       = ((ldbuf_rdata.operation inside {ariane_pkg::LW,  ariane_pkg::FLW, ariane_pkg::HLV_W}) & CVA6Cfg.IS_XLEN64) ? ldbuf_rdata.address_offset + 3 :
+  assign rdata_offset       = ((ldbuf_rdata.operation inside {ariane_pkg::LD}) & CVA6Cfg.IS_XLEN128) ? ldbuf_rdata.address_offset + 7 :
+                                ((ldbuf_rdata.operation inside {ariane_pkg::LW,  ariane_pkg::FLW, ariane_pkg::HLV_W}) & ~CVA6Cfg.IS_XLEN32) ? ldbuf_rdata.address_offset + 3 :
                                 ( ldbuf_rdata.operation inside {ariane_pkg::LH,  ariane_pkg::FLH, ariane_pkg::HLV_H})                     ? ldbuf_rdata.address_offset + 1 :
                                                                                                                          ldbuf_rdata.address_offset;
 
@@ -510,6 +511,8 @@ module load_unit
   // result mux
   always_comb begin
     unique case (ldbuf_rdata.operation)
+      ariane_pkg::LD, ariane_pkg::LDU:
+      result_o = {{CVA6Cfg.XLEN - 64{rdata_sign_bit}}, shifted_data[63:0]};
       ariane_pkg::LW, ariane_pkg::LWU, ariane_pkg::HLV_W, ariane_pkg::HLV_WU, ariane_pkg::HLVX_WU:
       result_o = {{CVA6Cfg.XLEN - 32{rdata_sign_bit}}, shifted_data[31:0]};
       ariane_pkg::LH, ariane_pkg::LHU, ariane_pkg::HLV_H, ariane_pkg::HLV_HU, ariane_pkg::HLVX_HU:

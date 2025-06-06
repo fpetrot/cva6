@@ -109,7 +109,7 @@ package ariane_pkg;
 `endif
 
   // read mask for SSTATUS over MMSTATUS
-  function automatic logic [63:0] smode_status_read_mask(config_pkg::cva6_cfg_t Cfg);
+  function automatic logic [127:0] smode_status_read_mask(config_pkg::cva6_cfg_t Cfg);
     return riscv::SSTATUS_UIE
     | riscv::SSTATUS_SIE
     | riscv::SSTATUS_SPIE
@@ -121,17 +121,17 @@ package ariane_pkg;
     | riscv::SSTATUS_UPIE
     | riscv::SSTATUS_SPIE
     | riscv::SSTATUS_UXL
-    | riscv::sstatus_sd(Cfg.IS_XLEN64);
+    | riscv::sstatus_sd(Cfg.XLEN == 128 ? 1'b1 : 1'b0, Cfg.XLEN == 64 ? 1'b1 : 1'b0, Cfg.XLEN == 32 ? 1'b1 : 1'b0);
   endfunction
 
-  localparam logic [63:0] SMODE_STATUS_WRITE_MASK = riscv::SSTATUS_SIE
+  localparam logic [127:0] SMODE_STATUS_WRITE_MASK = riscv::SSTATUS_SIE
                                                     | riscv::SSTATUS_SPIE
                                                     | riscv::SSTATUS_SPP
                                                     | riscv::SSTATUS_FS
                                                     | riscv::SSTATUS_SUM
                                                     | riscv::SSTATUS_MXR;
 
-  localparam logic [63:0] HSTATUS_WRITE_MASK      = riscv::HSTATUS_VSBE
+  localparam logic [127:0] HSTATUS_WRITE_MASK      = riscv::HSTATUS_VSBE
                                                     | riscv::HSTATUS_GVA
                                                     | riscv::HSTATUS_SPV
                                                     | riscv::HSTATUS_SPVP
@@ -271,7 +271,9 @@ package ariane_pkg;
 
   typedef enum logic [7:0] {  // basic ALU op
     ADD,
+    ADDD,
     SUB,
+    SUBD,
     ADDW,
     SUBW,
     // logic operations
@@ -280,8 +282,17 @@ package ariane_pkg;
     ANDL,
     // shifts
     SRA,
+    SRAD,
+    SRAI,
+    SRAID,
     SRL,
+    SRLD,
+    SRLI,
+    SRLID,
     SLL,
+    SLLD,
+    SLLI,
+    SLLID,
     SRLW,
     SLLW,
     SRAW,
@@ -315,10 +326,13 @@ package ariane_pkg;
     CSR_CLEAR,
     // LSU functions
     LD,
+    LDU,
+    LQ, //50
     SD,
+    SQ,
     LW,
     LWU,
-    SW,
+    SW, //55
     LH,
     LHU,
     SH,
@@ -363,18 +377,23 @@ package ariane_pkg;
     AMO_MIND,
     AMO_MINDU,
     // Multiplications
-    MUL,
+    MUL, // 97
     MULH,
     MULHU,
     MULHSU,
     MULW,
+    MULD,
     // Divisions
     DIV,
+    DIVD,
     DIVU,
+    DIVUD,
     DIVW,
     DIVUW,
     REM,
+    REMD,
     REMU,
+    REMUD,
     REMW,
     REMUW,
     // Floating-Point Load and Store Instructions
@@ -679,14 +698,14 @@ package ariane_pkg;
     logic        req;        // this request is valid
     amo_t        amo_op;     // atomic memory operation to perform
     logic [1:0]  size;       // 2'b10 --> word operation, 2'b11 --> double word operation
-    logic [63:0] operand_a;  // address
-    logic [63:0] operand_b;  // data as layouted in the register
+    logic [127:0] operand_a;  // address
+    logic [127:0] operand_b;  // data as layouted in the register
   } amo_req_t;
 
   // AMO response coming from cache.
   typedef struct packed {
     logic        ack;     // response is valid
-    logic [63:0] result;  // sign-extended, result
+    logic [127:0] result;  // sign-extended, result
   } amo_resp_t;
 
   localparam RVFI = cva6_config_pkg::CVA6ConfigRvfiTrace;
@@ -698,26 +717,30 @@ package ariane_pkg;
     return {{32{operand[31]}}, operand[31:0]};
   endfunction
 
+  function automatic logic [127:0] sext64to128(logic [63:0] operand);
+    return {{64{operand[63]}}, operand[63:0]};
+  endfunction
+
   // ----------------------
   // LSU Functions
   // ----------------------
   // generate byte enable mask
-  function automatic logic [7:0] be_gen(logic [2:0] addr, logic [1:0] size);
+  function automatic logic [7:0] be_gen(logic [2:0] addr, logic [2:0] size);
     case (size)
-      2'b11: begin
+      3'b011: begin
         return 8'b1111_1111;
       end
-      2'b10: begin
+      3'b010: begin
         case (addr[2:0])
           3'b000:  return 8'b0000_1111;
           3'b001:  return 8'b0001_1110;
           3'b010:  return 8'b0011_1100;
           3'b011:  return 8'b0111_1000;
           3'b100:  return 8'b1111_0000;
-          default: ;  // Do nothing
+          default: return 8'b0; // Invalid operation
         endcase
       end
-      2'b01: begin
+      3'b001: begin
         case (addr[2:0])
           3'b000:  return 8'b0000_0011;
           3'b001:  return 8'b0000_0110;
@@ -726,10 +749,10 @@ package ariane_pkg;
           3'b100:  return 8'b0011_0000;
           3'b101:  return 8'b0110_0000;
           3'b110:  return 8'b1100_0000;
-          default: ;  // Do nothing
+          default: return 8'b0; // Invalid operation
         endcase
       end
-      2'b00: begin
+      3'b000: begin
         case (addr[2:0])
           3'b000: return 8'b0000_0001;
           3'b001: return 8'b0000_0010;
@@ -739,31 +762,122 @@ package ariane_pkg;
           3'b101: return 8'b0010_0000;
           3'b110: return 8'b0100_0000;
           3'b111: return 8'b1000_0000;
+          default: return 8'b0; // Invalid operation
         endcase
       end
+      default: return 8'b0;
     endcase
     return 8'b0;
   endfunction
 
-  function automatic logic [3:0] be_gen_32(logic [1:0] addr, logic [1:0] size);
+  function automatic logic [15:0] be_gen_128(logic [3:0] addr, logic [2:0] size);
     case (size)
-      2'b10: begin
+      3'b100: begin
+        // 128-bit: quad
+        return 16'b1111_1111_1111_1111;
+      end
+      3'b011: begin
+        // 64-bit: double word
+        case (addr[3:0])
+          4'b0000:  return 16'b0000_0000_1111_1111;
+          4'b0001:  return 16'b0000_0001_1111_1110;
+          4'b0010:  return 16'b0000_0011_1111_1100;
+          4'b0011:  return 16'b0000_0111_1111_1000;
+          4'b0100:  return 16'b0000_1111_1111_0000;
+          4'b0101:  return 16'b0001_1111_1110_0000;
+          4'b0110:  return 16'b0011_1111_1100_0000;
+          4'b0111:  return 16'b0111_1111_1000_0000;
+          4'b1000:  return 16'b1111_1111_0000_0000;
+          default: return 16'b0; // Invalid operation
+        endcase
+      end
+      3'b010: begin
+        // 32-bit: word
+        case (addr[3:0])
+          4'b0000:  return 16'b0000_0000_0000_1111;
+          4'b0001:  return 16'b0000_0000_0001_1110;
+          4'b0010:  return 16'b0000_0000_0011_1100;
+          4'b0011:  return 16'b0000_0000_0111_1000;
+          4'b0100:  return 16'b0000_0000_1111_0000;
+          4'b0101:  return 16'b0000_0001_1110_0000;
+          4'b0110:  return 16'b0000_0011_1100_0000;
+          4'b0111:  return 16'b0000_0111_1000_0000;
+          4'b1000:  return 16'b0000_1111_0000_0000;
+          4'b1001:  return 16'b0001_1110_0000_0000;
+          4'b1010:  return 16'b0011_1100_0000_0000;
+          4'b1011:  return 16'b0111_1000_0000_0000;
+          4'b1100:  return 16'b1111_0000_0000_0000;
+          default: return 16'b0; // Invalid operation
+        endcase
+      end
+      3'b001: begin
+        // 16-bit: half word
+        case (addr[3:0])
+          4'b0000: return 16'b0000_0000_0000_0011;
+          4'b0001: return 16'b0000_0000_0000_0110;
+          4'b0010: return 16'b0000_0000_0000_1100;
+          4'b0011: return 16'b0000_0000_0001_1000;
+          4'b0100: return 16'b0000_0000_0011_0000;
+          4'b0101: return 16'b0000_0000_0110_0000;
+          4'b0110: return 16'b0000_0000_1100_0000;
+          4'b0111: return 16'b0000_0001_1000_0000;
+          4'b1000: return 16'b0000_0011_0000_0000;
+          4'b1001: return 16'b0000_0110_0000_0000;
+          4'b1010: return 16'b0000_1100_0000_0000;
+          4'b1011: return 16'b0001_1000_0000_0000;
+          4'b1100: return 16'b0011_0000_0000_0000;
+          4'b1101: return 16'b0110_0000_0000_0000;
+          4'b1110: return 16'b1100_0000_0000_0000;
+          default: return 16'b0; // Invalid operation
+        endcase
+      end
+      3'b000: begin
+        // 8-bit: byte
+        case (addr[3:0])
+          4'b0000: return 16'b0000_0000_0000_0001;
+          4'b0001: return 16'b0000_0000_0000_0010;
+          4'b0010: return 16'b0000_0000_0000_0100;
+          4'b0011: return 16'b0000_0000_0000_1000;
+          4'b0100: return 16'b0000_0000_0001_0000;
+          4'b0101: return 16'b0000_0000_0010_0000;
+          4'b0110: return 16'b0000_0000_0100_0000;
+          4'b0111: return 16'b0000_0000_1000_0000;
+          4'b1000: return 16'b0000_0001_0000_0000;
+          4'b1001: return 16'b0000_0010_0000_0000;
+          4'b1010: return 16'b0000_0100_0000_0000;
+          4'b1011: return 16'b0000_1000_0000_0000;
+          4'b1100: return 16'b0001_0000_0000_0000;
+          4'b1101: return 16'b0010_0000_0000_0000;
+          4'b1110: return 16'b0100_0000_0000_0000;
+          4'b1111: return 16'b1000_0000_0000_0000;       
+          default: return 16'b0; // Invalid operation
+        endcase
+      end
+      default: return 16'b0; // Invalid operation
+    endcase
+    return 16'b0;
+  endfunction
+
+  function automatic logic [3:0] be_gen_32(logic [1:0] addr, logic [2:0] size);
+    case (size)
+      3'b010: begin
         return 4'b1111;
       end
-      2'b01: begin
+      3'b001: begin
         case (addr[1:0])
           2'b00:   return 4'b0011;
           2'b01:   return 4'b0110;
           2'b10:   return 4'b1100;
-          default: ;  // Do nothing
+          default: return 4'b0; // Invalid operation
         endcase
       end
-      2'b00: begin
+      3'b000: begin
         case (addr[1:0])
           2'b00: return 4'b0001;
           2'b01: return 4'b0010;
           2'b10: return 4'b0100;
           2'b11: return 4'b1000;
+          default: return 4'b0; // Invalid operation
         endcase
       end
       default: return 4'b0;
@@ -774,17 +888,16 @@ package ariane_pkg;
   // ----------------------
   // Extract Bytes from Op
   // ----------------------
-  function automatic logic [1:0] extract_transfer_size(fu_op op);
+  function automatic logic [2:0] extract_transfer_size(fu_op op);
     case (op)
-      LD, HLV_D, SD, HSV_D, FLD, FSD,
+      LQ, SQ: return 3'b100;
+      LD, LDU, HLV_D, SD, HSV_D, FLD, FSD,
             AMO_LRD,   AMO_SCD,
             AMO_SWAPD, AMO_ADDD,
             AMO_ANDD,  AMO_ORD,
             AMO_XORD,  AMO_MAXD,
             AMO_MAXDU, AMO_MIND,
-            AMO_MINDU: begin
-        return 2'b11;
-      end
+            AMO_MINDU: return 3'b011;
       LW, LWU, HLV_W, HLV_WU, HLVX_WU,
             SW, HSV_W, FLW, FSW,
             AMO_LRW,   AMO_SCW,
@@ -792,12 +905,10 @@ package ariane_pkg;
             AMO_ANDW,  AMO_ORW,
             AMO_XORW,  AMO_MAXW,
             AMO_MAXWU, AMO_MINW,
-            AMO_MINWU: begin
-        return 2'b10;
-      end
-      LH, LHU, HLV_H, HLV_HU, HLVX_HU, SH, HSV_H, FLH, FSH: return 2'b01;
-      LB, LBU, HLV_B, HLV_BU, SB, HSV_B, FLB, FSB:          return 2'b00;
-      default:                                              return 2'b11;
+            AMO_MINWU: return 3'b010;
+      LH, LHU, HLV_H, HLV_HU, HLVX_HU, SH, HSV_H, FLH, FSH: return 3'b001;
+      LB, LBU, HLV_B, HLV_BU, SB, HSV_B, FLB, FSB:          return 3'b000;
+      default:                                              return 3'b011;
     endcase
   endfunction
   // ----------------------

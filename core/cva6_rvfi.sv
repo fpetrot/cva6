@@ -49,7 +49,7 @@ module cva6_rvfi
 
   localparam logic [CVA6Cfg.XLEN-1:0] hart_id_i = '0;
 
-  localparam logic [63:0] SMODE_STATUS_READ_MASK = ariane_pkg::smode_status_read_mask(CVA6Cfg);
+  localparam logic [127:0] SMODE_STATUS_READ_MASK = ariane_pkg::smode_status_read_mask(CVA6Cfg);
 
   logic flush;
   logic [CVA6Cfg.NrIssuePorts-1:0] issue_instr_ack;
@@ -465,7 +465,7 @@ module cva6_rvfi
   `CONNECT_RVFI_FULL(1'b1, pmpcfg0, csr.pmpcfg_q[CVA6Cfg.XLEN/8-1:0])
   `CONNECT_RVFI_FULL(CVA6Cfg.XLEN == 32, pmpcfg1, csr.pmpcfg_q[7:4])
 
-  `CONNECT_RVFI_FULL(1'b1, pmpcfg2, csr.pmpcfg_q[8+:CVA6Cfg.XLEN/8])
+  `CONNECT_RVFI_FULL(1'b1, pmpcfg2, CVA6Cfg.IS_XLEN128 ? csr.pmpcfg_q[CVA6Cfg.XLEN/8-1:0] : csr.pmpcfg_q[8+:CVA6Cfg.XLEN/8])
   `CONNECT_RVFI_FULL(CVA6Cfg.XLEN == 32, pmpcfg3, csr.pmpcfg_q[15:12])
 
   bit [CVA6Cfg.XLEN-1:0] pmpaddr_q;

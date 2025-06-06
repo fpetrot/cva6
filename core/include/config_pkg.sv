@@ -113,11 +113,11 @@ package config_pkg;
     // Debug support
     bit                          DebugEn;
     // Base address of the debug module
-    logic [63:0]                 DmBaseAddress;
+    logic [127:0]                 DmBaseAddress;
     // Address to jump when halt request
-    logic [63:0]                 HaltAddress;
+    logic [127:0]                 HaltAddress;
     // Address to jump when exception
-    logic [63:0]                 ExceptionAddress;
+    logic [127:0]                 ExceptionAddress;
     // Tval Support Enable
     bit                          TvalEn;
     // MTVEC CSR supports only direct mode
@@ -125,31 +125,31 @@ package config_pkg;
     // PMP entries number
     int unsigned                 NrPMPEntries;
     // PMP CSR configuration reset values
-    logic [63:0][63:0]           PMPCfgRstVal;
+    logic [127:0][127:0]           PMPCfgRstVal;
     // PMP CSR address reset values
-    logic [63:0][63:0]           PMPAddrRstVal;
+    logic [127:0][127:0]           PMPAddrRstVal;
     // PMP CSR read-only bits
-    bit [63:0]                   PMPEntryReadOnly;
+    bit [127:0]                   PMPEntryReadOnly;
     // PMP NA4 and NAPOT mode enable
     bit                          PMPNapotEn;
     // PMA non idempotent rules number
     int unsigned                 NrNonIdempotentRules;
     // PMA NonIdempotent region base address
-    logic [NrMaxRules-1:0][63:0] NonIdempotentAddrBase;
+    logic [NrMaxRules-1:0][127:0] NonIdempotentAddrBase;
     // PMA NonIdempotent region length
-    logic [NrMaxRules-1:0][63:0] NonIdempotentLength;
+    logic [NrMaxRules-1:0][127:0] NonIdempotentLength;
     // PMA regions with execute rules number
     int unsigned                 NrExecuteRegionRules;
     // PMA Execute region base address
-    logic [NrMaxRules-1:0][63:0] ExecuteRegionAddrBase;
+    logic [NrMaxRules-1:0][127:0] ExecuteRegionAddrBase;
     // PMA Execute region address base
-    logic [NrMaxRules-1:0][63:0] ExecuteRegionLength;
+    logic [NrMaxRules-1:0][127:0] ExecuteRegionLength;
     // PMA regions with cache rules number
     int unsigned                 NrCachedRegionRules;
     // PMA cache region base address
-    logic [NrMaxRules-1:0][63:0] CachedRegionAddrBase;
+    logic [NrMaxRules-1:0][127:0] CachedRegionAddrBase;
     // PMA cache region rules
-    logic [NrMaxRules-1:0][63:0] CachedRegionLength;
+    logic [NrMaxRules-1:0][127:0] CachedRegionLength;
     // CV-X-IF coprocessor interface enable
     bit                          CvxifEn;
     // Coprocessor type
@@ -243,6 +243,7 @@ package config_pkg;
     int unsigned GPLEN;
     bit IS_XLEN32;
     bit IS_XLEN64;
+    bit IS_XLEN128;
     int unsigned XLEN_ALIGN_BYTES;
     int unsigned ASID_WIDTH;
     int unsigned VMID_WIDTH;
@@ -305,8 +306,8 @@ package config_pkg;
     bit          RVU;                  //User mode
     bit          SoftwareInterruptEn;
 
-    logic [63:0] HaltAddress;
-    logic [63:0] ExceptionAddress;
+    logic [127:0] HaltAddress;
+    logic [127:0] ExceptionAddress;
     int unsigned RASDepth;
     int unsigned BTBEntries;
     bp_type_t    BPType;
@@ -319,24 +320,24 @@ package config_pkg;
     int unsigned VpnLen;
     int unsigned PtLevels;
 
-    logic [63:0]                 DmBaseAddress;
+    logic [127:0]                 DmBaseAddress;
     bit                          TvalEn;
     bit                          DirectVecOnly;
     int unsigned                 NrPMPEntries;
-    logic [63:0][63:0]           PMPCfgRstVal;
-    logic [63:0][63:0]           PMPAddrRstVal;
-    bit [63:0]                   PMPEntryReadOnly;
+    logic [127:0][127:0]           PMPCfgRstVal;
+    logic [127:0][127:0]           PMPAddrRstVal;
+    bit [127:0]                   PMPEntryReadOnly;
     bit                          PMPNapotEn;
     noc_type_e                   NOCType;
     int unsigned                 NrNonIdempotentRules;
-    logic [NrMaxRules-1:0][63:0] NonIdempotentAddrBase;
-    logic [NrMaxRules-1:0][63:0] NonIdempotentLength;
+    logic [NrMaxRules-1:0][127:0] NonIdempotentAddrBase;
+    logic [NrMaxRules-1:0][127:0] NonIdempotentLength;
     int unsigned                 NrExecuteRegionRules;
-    logic [NrMaxRules-1:0][63:0] ExecuteRegionAddrBase;
-    logic [NrMaxRules-1:0][63:0] ExecuteRegionLength;
+    logic [NrMaxRules-1:0][127:0] ExecuteRegionAddrBase;
+    logic [NrMaxRules-1:0][127:0] ExecuteRegionLength;
     int unsigned                 NrCachedRegionRules;
-    logic [NrMaxRules-1:0][63:0] CachedRegionAddrBase;
-    logic [NrMaxRules-1:0][63:0] CachedRegionLength;
+    logic [NrMaxRules-1:0][127:0] CachedRegionAddrBase;
+    logic [NrMaxRules-1:0][127:0] CachedRegionLength;
     int unsigned                 MaxOutstandingStores;
     bit                          DebugEn;
     bit                          NonIdemPotenceEn;       // Currently only used by V extension (Ara)
@@ -423,14 +424,14 @@ package config_pkg;
     // pragma translate_on
   endfunction
 
-  function automatic logic range_check(logic [63:0] base, logic [63:0] len, logic [63:0] address);
+  function automatic logic range_check(logic [127:0] base, logic [127:0] len, logic [127:0] address);
     // if len is a power of two, and base is properly aligned, this check could be simplified
     // Extend base by one bit to prevent an overflow.
-    return (address >= base) && (({1'b0, address}) < (65'(base) + len));
+    return (address >= base) && (({1'b0, address}) < (129'(base) + len));
   endfunction : range_check
 
 
-  function automatic logic is_inside_nonidempotent_regions(cva6_cfg_t Cfg, logic [63:0] address);
+  function automatic logic is_inside_nonidempotent_regions(cva6_cfg_t Cfg, logic [127:0] address);
     logic [NrMaxRules-1:0] pass;
     pass = '0;
     for (int unsigned k = 0; k < Cfg.NrNonIdempotentRules; k++) begin
@@ -439,7 +440,7 @@ package config_pkg;
     return |pass;
   endfunction : is_inside_nonidempotent_regions
 
-  function automatic logic is_inside_execute_regions(cva6_cfg_t Cfg, logic [63:0] address);
+  function automatic logic is_inside_execute_regions(cva6_cfg_t Cfg, logic [127:0] address);
     // if we don't specify any region we assume everything is accessible
     logic [NrMaxRules-1:0] pass;
     if (Cfg.NrExecuteRegionRules != 0) begin
@@ -453,7 +454,7 @@ package config_pkg;
     end
   endfunction : is_inside_execute_regions
 
-  function automatic logic is_inside_cacheable_regions(cva6_cfg_t Cfg, logic [63:0] address);
+  function automatic logic is_inside_cacheable_regions(cva6_cfg_t Cfg, logic [127:0] address);
     automatic logic [NrMaxRules-1:0] pass;
     pass = '0;
     for (int unsigned k = 0; k < Cfg.NrCachedRegionRules; k++) begin

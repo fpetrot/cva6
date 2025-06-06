@@ -159,9 +159,9 @@ module wt_axi_adapter
     axi_rd_blen  = '0;
 
     if (dcache_data.paddr[2] == 1'b0) begin
-      axi_wr_user = {{64 - CVA6Cfg.AxiUserWidth{1'b0}}, dcache_data.user};
+      axi_wr_user = {{128 - CVA6Cfg.AxiUserWidth{1'b0}}, dcache_data.user};
     end else begin
-      axi_wr_user = {dcache_data.user, {64 - CVA6Cfg.AxiUserWidth{1'b0}}};
+      axi_wr_user = {dcache_data.user, {128 - CVA6Cfg.AxiUserWidth{1'b0}}};
     end
 
     // arbiter mux

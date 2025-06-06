@@ -23,7 +23,8 @@ package riscv;
   // FIXME stop using them from CoreV-Verif and HPDCache
   // Then remove them from this package
   localparam XLEN = cva6_config_pkg::CVA6ConfigXlen;
-  localparam PLEN = (XLEN == 32) ? 34 : 56;
+  localparam VLEN = (XLEN == 128) ? 128 : (XLEN == 64) ? 64 : 32;
+  localparam PLEN = (XLEN == 128) ? 128 : (XLEN == 64) ? 56 : 34;
 
   // --------------------
   // Privilege Spec
@@ -51,6 +52,7 @@ package riscv;
 
   typedef struct packed {
     logic sd;  // signal dirty state - read-only
+    logic [126:63] wpri7; /// Padding for 128 bits
     logic [62:34] wpri6;  // writes preserved reads ignored
     xlen_e uxl;  // variable user mode xlen - hardwired to zero
     logic [11:0] wpri5;  // writes preserved reads ignored
@@ -72,6 +74,7 @@ package riscv;
   } sstatus_rv_t;
 
   typedef struct packed {
+    logic [126:63] wpri5; /// Padding for 128 bits
     logic [63:34] wpri4;  // writes preserved reads ignored
     xlen_e        vsxl;   // variable virtual supervisor mode xlen - hardwired to zero
     logic [8:0]   wpri3;  // floating point extension register
@@ -91,6 +94,7 @@ package riscv;
 
   typedef struct packed {
     logic sd;  // signal dirty state - read-only
+    logic [126:63] wpri5; /// Padding for 128 bits
     logic [62:40] wpri4;  // writes preserved reads ignored
     logic mpv;  // machine previous virtualization mode
     logic gva;  // variable set when trap writes to stval
@@ -233,6 +237,7 @@ package riscv;
   localparam OpcodeOpImm = 7'b00_100_11;
   localparam OpcodeAuipc = 7'b00_101_11;
   localparam OpcodeOpImm32 = 7'b00_110_11;
+  localparam OpcodeOpImm64 = 7'b10_110_11;
   // Quadrant 1
   localparam OpcodeStore = 7'b01_000_11;
   localparam OpcodeStoreFp = 7'b01_001_11;
@@ -241,6 +246,7 @@ package riscv;
   localparam OpcodeOp = 7'b01_100_11;
   localparam OpcodeLui = 7'b01_101_11;
   localparam OpcodeOp32 = 7'b01_110_11;
+  localparam OpcodeOp64 = 7'b11_110_11;
   // Quadrant 2
   localparam OpcodeMadd = 7'b10_000_11;
   localparam OpcodeMsub = 7'b10_001_11;
@@ -308,6 +314,20 @@ package riscv;
     logic r;
     logic v;
   } pte_t;
+
+  typedef struct packed {
+    logic [1:0] reserved;
+    logic [116-1:0] ppn;  // PPN length for
+    logic [1:0] rsw;
+    logic d;
+    logic a;
+    logic g;
+    logic u;
+    logic x;
+    logic w;
+    logic r;
+    logic v;
+  } pte_sv39l_t;
 
   // memory management, pte for sv32
   typedef struct packed {
@@ -716,68 +736,67 @@ package riscv;
     CSR_HPM_COUNTER_31H  = 12'hC9F   // reserved
   } csr_reg_t;
 
-  localparam logic [63:0] SSTATUS_UIE = 'h00000001;
-  localparam logic [63:0] SSTATUS_SIE = 'h00000002;
-  localparam logic [63:0] SSTATUS_SPIE = 'h00000020;
-  localparam logic [63:0] SSTATUS_SPP = 'h00000100;
-  localparam logic [63:0] SSTATUS_FS = 'h00006000;
-  localparam logic [63:0] SSTATUS_XS = 'h00018000;
-  localparam logic [63:0] SSTATUS_SUM = 'h00040000;
-  localparam logic [63:0] SSTATUS_MXR = 'h00080000;
-  localparam logic [63:0] SSTATUS_UPIE = 'h00000010;
-  localparam logic [63:0] SSTATUS_UXL = 64'h0000000300000000;
-  // CSR Bit Implementation Masks
-
-  function automatic logic [63:0] sstatus_sd(logic IS_XLEN64);
-    return {IS_XLEN64, 31'h00000000, ~IS_XLEN64, 31'h00000000};
+  localparam logic [127:0] SSTATUS_UIE = 'h00000001;
+  localparam logic [127:0] SSTATUS_SIE = 'h00000002;
+  localparam logic [127:0] SSTATUS_SPIE = 'h00000020;
+  localparam logic [127:0] SSTATUS_SPP = 'h00000100;
+  localparam logic [127:0] SSTATUS_FS = 'h00006000;
+  localparam logic [127:0] SSTATUS_XS = 'h00018000;
+  localparam logic [127:0] SSTATUS_SUM = 'h00040000;
+  localparam logic [127:0] SSTATUS_MXR = 'h00080000;
+  localparam logic [127:0] SSTATUS_UPIE = 'h00000010;
+  localparam logic [127:0] SSTATUS_UXL = 128'h0000000300000000;
+  function automatic logic [127:0] sstatus_sd(logic IS_XLEN128, logic IS_XLEN64, logic IS_XLEN32);
+    return {IS_XLEN128, 63'h00000000, IS_XLEN64, 31'h00000000, IS_XLEN32, 31'h00000000};
   endfunction
 
-  localparam logic [63:0] HSTATUS_VSBE = 'h00000020;
-  localparam logic [63:0] HSTATUS_GVA = 'h00000040;
-  localparam logic [63:0] HSTATUS_SPV = 'h00000080;
-  localparam logic [63:0] HSTATUS_SPVP = 'h00000100;
-  localparam logic [63:0] HSTATUS_HU = 'h00000200;
-  localparam logic [63:0] HSTATUS_VGEIN = 'h0003F000;
-  localparam logic [63:0] HSTATUS_VTVM = 'h00100000;
-  localparam logic [63:0] HSTATUS_VTW = 'h00200000;
-  localparam logic [63:0] HSTATUS_VTSR = 'h00400000;
-  localparam logic [63:0] HSTATUS_VSXL = 64'h0000000300000000;
+  localparam logic [127:0] HSTATUS_VSBE = 'h00000020;
+  localparam logic [127:0] HSTATUS_GVA = 'h00000040;
+  localparam logic [127:0] HSTATUS_SPV = 'h00000080;
+  localparam logic [127:0] HSTATUS_SPVP = 'h00000100;
+  localparam logic [127:0] HSTATUS_HU = 'h00000200;
+  localparam logic [127:0] HSTATUS_VGEIN = 'h0003F000;
+  localparam logic [127:0] HSTATUS_VTVM = 'h00100000;
+  localparam logic [127:0] HSTATUS_VTW = 'h00200000;
+  localparam logic [127:0] HSTATUS_VTSR = 'h00400000;
+  localparam logic [127:0] HSTATUS_VSXL = 128'h0000000300000000;
 
-  localparam logic [63:0] MSTATUS_UIE = 'h00000001;
-  localparam logic [63:0] MSTATUS_SIE = 'h00000002;
-  localparam logic [63:0] MSTATUS_HIE = 'h00000004;
-  localparam logic [63:0] MSTATUS_MIE = 'h00000008;
-  localparam logic [63:0] MSTATUS_UPIE = 'h00000010;
-  localparam logic [63:0] MSTATUS_SPIE = 'h00000020;
-  localparam logic [63:0] MSTATUS_HPIE = 'h00000040;
-  localparam logic [63:0] MSTATUS_MPIE = 'h00000080;
-  localparam logic [63:0] MSTATUS_SPP = 'h00000100;
-  localparam logic [63:0] MSTATUS_HPP = 'h00000600;
-  localparam logic [63:0] MSTATUS_MPP = 'h00001800;
-  localparam logic [63:0] MSTATUS_FS = 'h00006000;
-  localparam logic [63:0] MSTATUS_XS = 'h00018000;
-  localparam logic [63:0] MSTATUS_MPRV = 'h00020000;
-  localparam logic [63:0] MSTATUS_SUM = 'h00040000;
-  localparam logic [63:0] MSTATUS_MXR = 'h00080000;
-  localparam logic [63:0] MSTATUS_TVM = 'h00100000;
-  localparam logic [63:0] MSTATUS_TW = 'h00200000;
-  localparam logic [63:0] MSTATUS_TSR = 'h00400000;
-  function automatic logic [63:0] mstatus_uxl(logic IS_XLEN64);
-    return {30'h0000000, IS_XLEN64, IS_XLEN64, 32'h00000000};
+  localparam logic [127:0] MSTATUS_UIE = 'h00000001;
+  localparam logic [127:0] MSTATUS_SIE = 'h00000002;
+  localparam logic [127:0] MSTATUS_HIE = 'h00000004;
+  localparam logic [127:0] MSTATUS_MIE = 'h00000008;
+  localparam logic [127:0] MSTATUS_UPIE = 'h00000010;
+  localparam logic [127:0] MSTATUS_SPIE = 'h00000020;
+  localparam logic [127:0] MSTATUS_HPIE = 'h00000040;
+  localparam logic [127:0] MSTATUS_MPIE = 'h00000080;
+  localparam logic [127:0] MSTATUS_SPP = 'h00000100;
+  localparam logic [127:0] MSTATUS_HPP = 'h00000600;
+  localparam logic [127:0] MSTATUS_MPP = 'h00001800;
+  localparam logic [127:0] MSTATUS_FS = 'h00006000;
+  localparam logic [127:0] MSTATUS_XS = 'h00018000;
+  localparam logic [127:0] MSTATUS_MPRV = 'h00020000;
+  localparam logic [127:0] MSTATUS_SUM = 'h00040000;
+  localparam logic [127:0] MSTATUS_MXR = 'h00080000;
+  localparam logic [127:0] MSTATUS_TVM = 'h00100000;
+  localparam logic [127:0] MSTATUS_TW = 'h00200000;
+  localparam logic [127:0] MSTATUS_TSR = 'h00400000;
+  function automatic logic [127:0] mstatus_uxl(logic IS_XLEN64);
+    return {94'h0000000, IS_XLEN64, IS_XLEN64, 32'h00000000};
   endfunction
-  function automatic logic [63:0] mstatus_sxl(logic IS_XLEN64);
-    return {28'h0000000, IS_XLEN64, IS_XLEN64, 34'h00000000};
+  function automatic logic [127:0] mstatus_sxl(logic IS_XLEN64);
+    return {92'h0000000, IS_XLEN64, IS_XLEN64, 34'h00000000};
   endfunction
-  function automatic logic [63:0] mstatus_sd(logic IS_XLEN64);
-    return {IS_XLEN64, 31'h00000000, ~IS_XLEN64, 31'h00000000};
+  function automatic logic [127:0] mstatus_sd(logic IS_XLEN128, logic IS_XLEN64, IS_XLEN32);
+    return {IS_XLEN128, 63'h00000000, IS_XLEN64, 31'h00000000, IS_XLEN32, 31'h00000000};
   endfunction
 
-  localparam logic [63:0] MENVCFG_FIOM = 'h00000001;
-  localparam logic [63:0] MENVCFG_CBIE = 'h00000030;
-  localparam logic [63:0] MENVCFG_CBFE = 'h00000040;
-  localparam logic [63:0] MENVCFG_CBZE = 'h00000080;
-  localparam logic [63:0] MENVCFG_PBMTE = 64'h4000000000000000;
-  localparam logic [63:0] MENVCFG_STCE = 64'h8000000000000000;
+
+  localparam logic [127:0] MENVCFG_FIOM = 'h00000001;
+  localparam logic [127:0] MENVCFG_CBIE = 'h00000030;
+  localparam logic [127:0] MENVCFG_CBFE = 'h00000040;
+  localparam logic [127:0] MENVCFG_CBZE = 'h00000080;
+  localparam logic [127:0] MENVCFG_PBMTE = 128'h4000000000000000;
+  localparam logic [127:0] MENVCFG_STCE = 128'h8000000000000000;
 
 
 

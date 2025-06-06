@@ -59,7 +59,7 @@ module store_unit
     // Virtual address - TO_BE_COMPLETED
     output logic [CVA6Cfg.VLEN-1:0] vaddr_o,
     // RVFI information - RVFI
-    output logic [CVA6Cfg.PLEN-1:0] rvfi_mem_paddr_o,
+    output [CVA6Cfg.PLEN-1:0] rvfi_mem_paddr_o,
     // Transformed trap instruction out - TO_BE_COMPLETED
     output logic [31:0] tinst_o,
     // TO_BE_COMPLETED - TO_BE_COMPLETED
@@ -85,30 +85,30 @@ module store_unit
     // Data cache response - CACHES
     output dcache_req_i_t req_port_o
 );
-
-  // align data to address e.g.: shift data to be naturally 64
-  function automatic [CVA6Cfg.XLEN-1:0] data_align(logic [2:0] addr, logic [63:0] data);
-    // Set addr[2] to 1'b0 when 32bits
-    logic [ 2:0] addr_tmp = {(addr[2] && CVA6Cfg.IS_XLEN64), addr[1:0]};
-    logic [63:0] data_tmp = {64{1'b0}};
+  // FIXME : certaines valeurs renvoyées sont incorrectes
+  // align data to address e.g.: shift data to be naturally 128
+  function automatic [CVA6Cfg.XLEN-1:0] data_align(logic [3:0] addr, logic [127:0] data);
+    // Set addr[3] and addr[2] to 1'b0 when 32 bits, and addr[3] to 1'b0 when 64 bits
+    logic [ 3:0] addr_tmp = {(addr[3] && CVA6Cfg.IS_XLEN128), (addr[2] && ~CVA6Cfg.IS_XLEN32), addr[1:0]};
+    logic [127:0] data_tmp = {128{1'b0}};
     case (addr_tmp)
-      3'b000: data_tmp[CVA6Cfg.XLEN-1:0] = {data[CVA6Cfg.XLEN-1:0]};
-      3'b001:
-      data_tmp[CVA6Cfg.XLEN-1:0] = {data[CVA6Cfg.XLEN-9:0], data[CVA6Cfg.XLEN-1:CVA6Cfg.XLEN-8]};
-      3'b010:
-      data_tmp[CVA6Cfg.XLEN-1:0] = {data[CVA6Cfg.XLEN-17:0], data[CVA6Cfg.XLEN-1:CVA6Cfg.XLEN-16]};
-      3'b011:
-      data_tmp[CVA6Cfg.XLEN-1:0] = {data[CVA6Cfg.XLEN-25:0], data[CVA6Cfg.XLEN-1:CVA6Cfg.XLEN-24]};
-      default:
-      if (CVA6Cfg.IS_XLEN64) begin
-        case (addr_tmp)
-          3'b100:  data_tmp = {data[31:0], data[63:32]};
-          3'b101:  data_tmp = {data[23:0], data[63:24]};
-          3'b110:  data_tmp = {data[15:0], data[63:16]};
-          3'b111:  data_tmp = {data[7:0], data[63:8]};
-          default: data_tmp = {data[63:0]};
-        endcase
-      end
+      4'b0000: data_tmp[CVA6Cfg.XLEN-1:0] = {data[CVA6Cfg.XLEN-1:0]};
+      4'b0001: data_tmp[CVA6Cfg.XLEN-1:0] = {data[CVA6Cfg.XLEN-9:0], data[CVA6Cfg.XLEN-1:CVA6Cfg.XLEN-8]};
+      4'b0010: data_tmp[CVA6Cfg.XLEN-1:0] = {data[CVA6Cfg.XLEN-17:0], data[CVA6Cfg.XLEN-1:CVA6Cfg.XLEN-16]};
+      4'b0011: data_tmp[CVA6Cfg.XLEN-1:0] = {data[CVA6Cfg.XLEN-25:0], data[CVA6Cfg.XLEN-1:CVA6Cfg.XLEN-24]};
+      4'b0100: data_tmp[CVA6Cfg.XLEN-1:0] = {data[CVA6Cfg.XLEN-33:0], data[CVA6Cfg.XLEN-1:CVA6Cfg.XLEN-32]};
+      4'b0101: data_tmp[CVA6Cfg.XLEN-1:0] = {data[CVA6Cfg.XLEN-41:0], data[CVA6Cfg.XLEN-1:CVA6Cfg.XLEN-40]};
+      4'b0110: data_tmp[CVA6Cfg.XLEN-1:0] = {data[CVA6Cfg.XLEN-49:0], data[CVA6Cfg.XLEN-1:CVA6Cfg.XLEN-48]};
+      4'b0111: data_tmp[CVA6Cfg.XLEN-1:0] = {data[CVA6Cfg.XLEN-57:0], data[CVA6Cfg.XLEN-1:CVA6Cfg.XLEN-56]};
+      //4'b1000: data_tmp[CVA6Cfg.XLEN-1:0] = {data[CVA6Cfg.XLEN-65:0], data[CVA6Cfg.XLEN-1:CVA6Cfg.XLEN-64]};
+      4'b1000: data_tmp[CVA6Cfg.XLEN-1:0] = {data[CVA6Cfg.XLEN-1:0]};
+      4'b1001: data_tmp[CVA6Cfg.XLEN-1:0] = {data[CVA6Cfg.XLEN-73:0], data[CVA6Cfg.XLEN-1:CVA6Cfg.XLEN-72]};
+      4'b1010: data_tmp[CVA6Cfg.XLEN-1:0] = {data[CVA6Cfg.XLEN-81:0], data[CVA6Cfg.XLEN-1:CVA6Cfg.XLEN-80]};
+      4'b1011: data_tmp[CVA6Cfg.XLEN-1:0] = {data[CVA6Cfg.XLEN-89:0], data[CVA6Cfg.XLEN-1:CVA6Cfg.XLEN-88]};
+      4'b1100: data_tmp[CVA6Cfg.XLEN-1:0] = {data[CVA6Cfg.XLEN-97:0], data[CVA6Cfg.XLEN-1:CVA6Cfg.XLEN-96]};
+      4'b1101: data_tmp[CVA6Cfg.XLEN-1:0] = {data[CVA6Cfg.XLEN-105:0], data[CVA6Cfg.XLEN-1:CVA6Cfg.XLEN-104]};
+      4'b1110: data_tmp[CVA6Cfg.XLEN-1:0] = {data[CVA6Cfg.XLEN-113:0], data[CVA6Cfg.XLEN-1:CVA6Cfg.XLEN-112]};
+      4'b1111: data_tmp[CVA6Cfg.XLEN-1:0] = {data[CVA6Cfg.XLEN-121:0], data[CVA6Cfg.XLEN-1:CVA6Cfg.XLEN-120]};
     endcase
     return data_tmp[CVA6Cfg.XLEN-1:0];
   endfunction
@@ -252,7 +252,7 @@ module store_unit
     st_be_n = lsu_ctrl_i.be;
     // don't shift the data if we are going to perform an AMO as we still need to operate on this data
     st_data_n = (CVA6Cfg.RVA && instr_is_amo) ? lsu_ctrl_i.data[CVA6Cfg.XLEN-1:0] :
-        data_align(lsu_ctrl_i.vaddr[2:0], {{64 - CVA6Cfg.XLEN{1'b0}}, lsu_ctrl_i.data});
+        data_align(lsu_ctrl_i.vaddr[3:0], {{128 - CVA6Cfg.XLEN{1'b0}}, lsu_ctrl_i.data});
     st_data_size_n = extract_transfer_size(lsu_ctrl_i.operation);
     // save AMO op for next cycle
     if (CVA6Cfg.RVA) begin

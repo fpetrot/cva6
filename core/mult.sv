@@ -37,9 +37,9 @@ module mult
   logic mul_valid_op;
   // Input Arbitration
 
-  assign mul_valid_op = ~flush_i && mult_valid_i && (fu_data_i.operation inside { MUL, MULH, MULHU, MULHSU, MULW, CLMUL, CLMULH, CLMULR });
+  assign mul_valid_op = ~flush_i && mult_valid_i && (fu_data_i.operation inside { MUL, MULH, MULHU, MULHSU, MULW, MULD, CLMUL, CLMULH, CLMULR });
 
-  assign div_valid_op = ~flush_i && mult_valid_i && (fu_data_i.operation inside { DIV, DIVU, DIVW, DIVUW, REM, REMU, REMW, REMUW });
+  assign div_valid_op = ~flush_i && mult_valid_i && (fu_data_i.operation inside { DIV, DIVU, DIVW, DIVUW, DIVD, DIVUD, REM, REMU, REMW, REMUW, REMD, REMUD });
 
   // ---------------------
   // Output Arbitration
@@ -81,11 +81,16 @@ module mult
   logic                    div_signed;  // signed or unsigned division
   logic                    rem;  // is it a reminder (or not a reminder e.g.: a division)
   logic word_op_d, word_op_q;  // save whether the operation was signed or not
+  logic word, double;
 
   // is this a signed op?
-  assign div_signed = fu_data_i.operation inside {DIV, DIVW, REM, REMW};
+  assign div_signed = fu_data_i.operation inside {DIV, DIVW, DIVD, REM, REMW, REMD};
   // is this a modulo?
-  assign rem        = fu_data_i.operation inside {REM, REMU, REMW, REMUW};
+  assign rem        = fu_data_i.operation inside {REM, REMU, REMW, REMUW, REMD, REMUD};
+
+  // is this a word operation?
+  assign word = ((CVA6Cfg.IS_XLEN64 || CVA6Cfg.IS_XLEN128) && (fu_data_i.operation == DIVW || fu_data_i.operation == DIVUW || fu_data_i.operation == REMW || fu_data_i.operation == REMUW));
+  assign double = (CVA6Cfg.IS_XLEN128 && (fu_data_i.operation == DIVD || fu_data_i.operation == DIVUD || fu_data_i.operation == REMD || fu_data_i.operation == REMUD));
 
   // prepare the input operands and control divider
   always_comb begin
@@ -96,16 +101,16 @@ module mult
     word_op_d = word_op_q;
 
     // we've go a new division operation
-    if (mult_valid_i && fu_data_i.operation inside {DIV, DIVU, DIVW, DIVUW, REM, REMU, REMW, REMUW}) begin
+    if (mult_valid_i && fu_data_i.operation inside {DIV, DIVU, DIVD, DIVUD, DIVW, DIVUW, REM, REMU, REMW, REMUW, REMD, REMUD}) begin
       // is this a word operation?
-      if (CVA6Cfg.IS_XLEN64 && (fu_data_i.operation == DIVW || fu_data_i.operation == DIVUW || fu_data_i.operation == REMW || fu_data_i.operation == REMUW)) begin
+      if (word || double) begin
         // yes so check if we should sign extend this is only done for a signed operation
         if (div_signed) begin
-          operand_a = sext32to64(fu_data_i.operand_a[31:0]);
-          operand_b = sext32to64(fu_data_i.operand_b[31:0]);
+          operand_a = word ? {{CVA6Cfg.XLEN-32{fu_data_i.operand_a[31]}}, fu_data_i.operand_a[31:0]} : sext64to128(fu_data_i.operand_a[63:0]);
+          operand_b = word ? {{CVA6Cfg.XLEN-32{fu_data_i.operand_b[31]}}, fu_data_i.operand_b[31:0]} : sext64to128(fu_data_i.operand_b[63:0]);
         end else begin
-          operand_a = fu_data_i.operand_a[31:0];
-          operand_b = fu_data_i.operand_b[31:0];
+          operand_a = word ? fu_data_i.operand_a[31:0] : fu_data_i.operand_a[63:0];
+          operand_b = word ? fu_data_i.operand_b[31:0] : fu_data_i.operand_b[63:0];
         end
 
         // save whether we want sign extend the result or not, this is done for all word operations
@@ -143,7 +148,8 @@ module mult
 
   // Result multiplexer
   // if it was a signed word operation the bit will be set and the result will be sign extended accordingly
-  assign div_result = (CVA6Cfg.IS_XLEN64 && word_op_q) ? sext32to64(result) : result;
+
+  assign div_result = (CVA6Cfg.IS_XLEN128 && word_op_q) ? sext64to128(result[63:0]) : (CVA6Cfg.IS_XLEN64 && word_op_q) ? sext32to64(result[31:0]) : result;
 
   // ---------------------
   // Registers

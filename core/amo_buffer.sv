@@ -50,8 +50,8 @@ module amo_buffer #(
   assign amo_req_o.req = no_st_pending_i & amo_valid_commit_i & amo_valid;
   assign amo_req_o.amo_op = amo_data_out.op;
   assign amo_req_o.size = amo_data_out.size;
-  assign amo_req_o.operand_a = {{64 - CVA6Cfg.PLEN{1'b0}}, amo_data_out.paddr};
-  assign amo_req_o.operand_b = {{64 - CVA6Cfg.XLEN{1'b0}}, amo_data_out.data};
+  assign amo_req_o.operand_a = {{128 - CVA6Cfg.PLEN{1'b0}}, amo_data_out.paddr};
+  assign amo_req_o.operand_b = {{128 - CVA6Cfg.XLEN{1'b0}}, amo_data_out.data};
 
   assign amo_data_in.op = amo_op_i;
   assign amo_data_in.data = data_i;

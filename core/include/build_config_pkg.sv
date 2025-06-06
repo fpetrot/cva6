@@ -2,7 +2,8 @@ package build_config_pkg;
 
   function automatic config_pkg::cva6_cfg_t build_config(config_pkg::cva6_user_cfg_t CVA6Cfg);
     bit IS_XLEN32 = (CVA6Cfg.XLEN == 32) ? 1'b1 : 1'b0;
-    bit IS_XLEN64 = (CVA6Cfg.XLEN == 32) ? 1'b0 : 1'b1;
+    bit IS_XLEN64 = (CVA6Cfg.XLEN == 64) ? 1'b1 : 1'b0;
+    bit IS_XLEN128 = (CVA6Cfg.XLEN == 128) ? 1'b1 : 1'b0;
     bit FpPresent = CVA6Cfg.RVF | CVA6Cfg.RVD | CVA6Cfg.XF16 | CVA6Cfg.XF16ALT | CVA6Cfg.XF8;
     bit NSX = CVA6Cfg.XF16 | CVA6Cfg.XF16ALT | CVA6Cfg.XF8 | CVA6Cfg.XFVec;  // Are non-standard extensions present?
     int unsigned FLen = CVA6Cfg.RVD ? 64 :  // D ext.
@@ -32,11 +33,12 @@ package build_config_pkg;
     config_pkg::cva6_cfg_t cfg;
 
     cfg.XLEN = CVA6Cfg.XLEN;
-    cfg.VLEN = CVA6Cfg.VLEN;
-    cfg.PLEN = (CVA6Cfg.XLEN == 32) ? 34 : 56;
-    cfg.GPLEN = (CVA6Cfg.XLEN == 32) ? 34 : 41;
+    cfg.VLEN = (CVA6Cfg.XLEN == 128) ? 128 : (CVA6Cfg.XLEN == 64) ? 64 : 32;
+    cfg.PLEN = (CVA6Cfg.XLEN == 128) ? 128 : (CVA6Cfg.XLEN == 64) ? 56 : 34;
+    cfg.GPLEN = (CVA6Cfg.XLEN == 128) ? 128 : (CVA6Cfg.XLEN == 64) ? 41 : 34;
     cfg.IS_XLEN32 = IS_XLEN32;
     cfg.IS_XLEN64 = IS_XLEN64;
+    cfg.IS_XLEN128 = IS_XLEN128;
     cfg.XLEN_ALIGN_BYTES = $clog2(CVA6Cfg.XLEN / 8);
     cfg.ASID_WIDTH = (CVA6Cfg.XLEN == 64) ? 16 : 1;
     cfg.VMID_WIDTH = (CVA6Cfg.XLEN == 64) ? 14 : 1;
@@ -165,11 +167,11 @@ package build_config_pkg;
     cfg.INSTR_PER_FETCH = cfg.FETCH_WIDTH / (CVA6Cfg.RVC ? 16 : 32);
     cfg.LOG2_INSTR_PER_FETCH = cfg.INSTR_PER_FETCH > 1 ? $clog2(cfg.INSTR_PER_FETCH) : 1;
 
-    cfg.ModeW = (CVA6Cfg.XLEN == 32) ? 1 : 4;
-    cfg.ASIDW = (CVA6Cfg.XLEN == 32) ? 9 : 16;
-    cfg.VMIDW = (CVA6Cfg.XLEN == 32) ? 7 : 14;
-    cfg.PPNW = (CVA6Cfg.XLEN == 32) ? 22 : 44;
-    cfg.GPPNW = (CVA6Cfg.XLEN == 32) ? 22 : 29;
+    cfg.ModeW = (CVA6Cfg.XLEN == 128) ? 4   : (CVA6Cfg.XLEN == 64) ? 4  : 1;
+    cfg.ASIDW = (CVA6Cfg.XLEN == 128) ? 8   : (CVA6Cfg.XLEN == 64) ? 16 : 9;
+    cfg.VMIDW = (CVA6Cfg.XLEN == 128) ? 6   : (CVA6Cfg.XLEN == 64) ? 14 : 7;
+    cfg.PPNW =  (CVA6Cfg.XLEN == 128) ? 116 : (CVA6Cfg.XLEN == 64) ? 44 : 22;
+    cfg.GPPNW = (CVA6Cfg.XLEN == 128) ? 29  : (CVA6Cfg.XLEN == 64) ? 29 : 22;
     cfg.MODE_SV = (CVA6Cfg.XLEN == 32) ? config_pkg::ModeSv32 : config_pkg::ModeSv39;
     cfg.SV = (cfg.MODE_SV == config_pkg::ModeSv32) ? 32 : 39;
     cfg.SVX = (cfg.MODE_SV == config_pkg::ModeSv32) ? 34 : 41;

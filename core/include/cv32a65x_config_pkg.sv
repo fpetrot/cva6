@@ -23,9 +23,9 @@ package cva6_config_pkg;
       VLEN: unsigned'(32),
       FpgaEn: bit'(0),
       FpgaAlteraEn: bit'(0),
-      TechnoCut: bit'(1),
-      SuperscalarEn: bit'(1),
-      NrCommitPorts: unsigned'(1),
+      TechnoCut: bit'(0), // ok
+      SuperscalarEn: bit'(0), // ok
+      NrCommitPorts: unsigned'(2), // ok
       AxiAddrWidth: unsigned'(CVA6ConfigAxiAddrWidth),
       AxiDataWidth: unsigned'(CVA6ConfigAxiDataWidth),
       AxiIdWidth: unsigned'(CVA6ConfigAxiIdWidth),
@@ -39,73 +39,73 @@ package cva6_config_pkg;
       XF8: bit'(0),
       RVA: bit'(0),
       RVB: bit'(1),
-      ZKN: bit'(0),
+      ZKN: bit'(1), //  ok
       RVV: bit'(0),
       RVC: bit'(1),
       RVH: bit'(0),
-      RVZCMT: bit'(0),
       RVZCB: bit'(1),
+      RVZCMT: bit'(0),
       RVZCMP: bit'(0),
       XFVec: bit'(0),
       CvxifEn: bit'(1),
-      CoproType: config_pkg::COPRO_EXAMPLE,
+      CoproType: config_pkg::COPRO_NONE, // ok
       RVZiCond: bit'(0),
-      RVZicntr: bit'(0),
-      RVZihpm: bit'(0),
+      RVZicntr: bit'(1), // ok
+      RVZihpm: bit'(1), // ok
       NrScoreboardEntries: unsigned'(8),
       PerfCounterEn: bit'(0),
-      MmuPresent: bit'(0),
-      RVS: bit'(0),
-      RVU: bit'(0),
-      SoftwareInterruptEn: bit'(0),
+      MmuPresent: bit'(1), // ok
+      RVS: bit'(1), // ok
+      RVU: bit'(1), // ok
+      SoftwareInterruptEn: bit'(1), // ok
       HaltAddress: 64'h800,
       ExceptionAddress: 64'h808,
       RASDepth: unsigned'(2),
-      BTBEntries: unsigned'(0),
+      BTBEntries: unsigned'(32), // ok
       BPType: config_pkg::BHT,
-      BHTEntries: unsigned'(32),
+      BHTEntries: unsigned'(128), // ok
       BHTHist: unsigned'(3),
       DmBaseAddress: 64'h0,
-      TvalEn: bit'(0),
-      DirectVecOnly: bit'(1),
+      TvalEn: bit'(1), // ok
+      DirectVecOnly: bit'(0), // ok
       NrPMPEntries: unsigned'(8),
       PMPCfgRstVal: {64{64'h0}},
       PMPAddrRstVal: {64{64'h0}},
       PMPEntryReadOnly: 64'd0,
-      PMPNapotEn: bit'(0),
+      PMPNapotEn: bit'(1), // ok
       NOCType: config_pkg::NOC_TYPE_AXI4_ATOP,
-      NrNonIdempotentRules: unsigned'(0),
-      NonIdempotentAddrBase: 1024'({64'b0, 64'b0}),
-      NonIdempotentLength: 1024'({64'b0, 64'b0}),
-      NrExecuteRegionRules: unsigned'(0),
+      NrNonIdempotentRules: unsigned'(0), // ko
+      NonIdempotentAddrBase: 1024'({64'b0, 64'b0}), // ko
+      NonIdempotentLength: 1024'({64'b0, 64'b0}), // ko
+      NrExecuteRegionRules: unsigned'(0), // ko
       ExecuteRegionAddrBase: 1024'({64'h8000_0000, 64'h1_0000, 64'h0}),
       ExecuteRegionLength: 1024'({64'h40000000, 64'h10000, 64'h1000}),
       NrCachedRegionRules: unsigned'(1),
       CachedRegionAddrBase: 1024'({64'h8000_0000}),
       CachedRegionLength: 1024'({64'h40000000}),
       MaxOutstandingStores: unsigned'(7),
-      DebugEn: bit'(0),
+      DebugEn: bit'(1), // ok
       AxiBurstWriteEn: bit'(0),
-      IcacheByteSize: unsigned'(2048),
-      IcacheSetAssoc: unsigned'(2),
+      IcacheByteSize: unsigned'(16384), // ok
+      IcacheSetAssoc: unsigned'(4), // ok
       IcacheLineWidth: unsigned'(128),
       DCacheType: config_pkg::HPDCACHE_WT,
-      DcacheByteSize: unsigned'(2028),
-      DcacheSetAssoc: unsigned'(2),
-      DcacheLineWidth: unsigned'(128),
+      DcacheByteSize: unsigned'(32768), // ok
+      DcacheSetAssoc: unsigned'(8), // ok
+      DcacheLineWidth: unsigned'(128), // ok
       DcacheFlushOnFence: bit'(0),
       DcacheInvalidateOnFlush: bit'(0),
-      DataUserEn: unsigned'(1),
+      DataUserEn: unsigned'(0), // ok
       WtDcacheWbufDepth: int'(8),
       FetchUserWidth: unsigned'(32),
-      FetchUserEn: unsigned'(1),
+      FetchUserEn: unsigned'(0), // ok
       InstrTlbEntries: int'(2),
       DataTlbEntries: int'(2),
       UseSharedTlb: bit'(1),
       SharedTlbDepth: int'(64),
-      NrLoadPipeRegs: int'(0),
+      NrLoadPipeRegs: int'(1), // ok
       NrStorePipeRegs: int'(0),
-      DcacheIdWidth: int'(1)
+      DcacheIdWidth: int'(3) // ok
   };
 
 endpackage

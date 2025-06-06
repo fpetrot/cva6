@@ -86,7 +86,7 @@ module cva6_icache_axi_wrapper
   assign axi_rd_addr           = CVA6Cfg.AxiAddrWidth'(req_data_d.paddr);
 
   // Fetch a full cache line on a cache miss, or a single word on a bypassed access
-  assign axi_rd_blen           = (req_data_d.nc) ? '0 : CVA6Cfg.ICACHE_LINE_WIDTH / 64 - 1;
+  assign axi_rd_blen           = (req_data_d.nc) ? '0 : (CVA6Cfg.XLEN == 128) ? CVA6Cfg.ICACHE_LINE_WIDTH / 128 - 1 : CVA6Cfg.ICACHE_LINE_WIDTH / 64 - 1;
   assign axi_rd_size           = $clog2(CVA6Cfg.AxiDataWidth / 8);  // Maximum
   assign axi_rd_id_in          = req_data_d.tid;
   assign axi_rd_rdy            = 1'b1;

@@ -689,7 +689,9 @@ module load_store_unit
   // 12 bit are the same anyway
   // and we can always generate the byte enable from the address at hand
 
-  if (CVA6Cfg.IS_XLEN64) begin : gen_8b_be
+  if (CVA6Cfg.IS_XLEN128) begin : gen_16b_be
+    assign be_i = be_gen_128(vaddr_i[3:0], extract_transfer_size(fu_data_i.operation));
+  end else if (CVA6Cfg.IS_XLEN64) begin : gen_8b_be
     assign be_i = be_gen(vaddr_i[2:0], extract_transfer_size(fu_data_i.operation));
   end else begin : gen_4b_be
     assign be_i = be_gen_32(vaddr_i[1:0], extract_transfer_size(fu_data_i.operation));
@@ -708,15 +710,21 @@ module load_store_unit
     data_misaligned = 1'b0;
 
     if (lsu_ctrl.valid) begin
-      if (CVA6Cfg.IS_XLEN64) begin
+      if (~CVA6Cfg.IS_XLEN32) begin
         case (lsu_ctrl.operation)
+        // Quad word
+        LQ, SQ: begin
+          if (CVA6Cfg.IS_XLEN128 && lsu_ctrl.vaddr[3:0] != 4'b0000) begin
+            data_misaligned = 1'b1;
+          end
+        end
           // double word
-          LD, SD, FLD, FSD,
+        LD, LDU, SD, FLD, FSD,
                   AMO_LRD, AMO_SCD,
                   AMO_SWAPD, AMO_ADDD, AMO_ANDD, AMO_ORD,
                   AMO_XORD, AMO_MAXD, AMO_MAXDU, AMO_MIND,
                   AMO_MINDU, HLV_D, HSV_D: begin
-            if (lsu_ctrl.vaddr[2:0] != 3'b000) begin
+          if (lsu_ctrl.vaddr[2:0] != 3'b000) begin
               data_misaligned = 1'b1;
             end
           end
@@ -830,7 +838,7 @@ module load_store_unit
         end
         default: ;
       endcase
-    end
+      end
   end
 
 
