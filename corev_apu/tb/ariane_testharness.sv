@@ -28,10 +28,10 @@ module ariane_testharness #(
   //
   parameter int unsigned AXI_USER_WIDTH    = CVA6Cfg.AxiUserWidth,
   parameter int unsigned AXI_USER_EN       = CVA6Cfg.AXI_USER_EN,
-  parameter int unsigned AXI_ADDRESS_WIDTH = 64,
+  parameter int unsigned AXI_ADDRESS_WIDTH = 128,
   parameter int unsigned AXI_DATA_WIDTH    = 64,
   parameter bit          InclSimDTM        = 1'b1,
-  parameter int unsigned NUM_WORDS         = 2**25,         // memory size
+  parameter int unsigned NUM_WORDS         = 2**12,         // memory size
   parameter bit          StallRandomOutput = 1'b0,
   parameter bit          StallRandomInput  = 1'b0
 ) (
@@ -133,7 +133,7 @@ module ariane_testharness #(
   initial begin
     if (!$value$plusargs("jtag_rbb_enable=%b", jtag_enable)) jtag_enable = 'h0;
     if ($test$plusargs("debug_disable")) debug_enable = 'h0; else debug_enable = 'h1;
-    if (CVA6Cfg.XLEN != 32 & CVA6Cfg.XLEN != 64) $error("CVA6Cfg.XLEN different from 32 and 64");
+    if (CVA6Cfg.XLEN != 32 & CVA6Cfg.XLEN != 64 & CVA6Cfg.XLEN != 128) $error("CVA6Cfg.XLEN different from 32, 64 and 128");
   end
 
   // debug if MUX
@@ -236,16 +236,16 @@ module ariane_testharness #(
 
   logic                dm_slave_req;
   logic                dm_slave_we;
-  logic [64-1:0]       dm_slave_addr;
-  logic [64/8-1:0]     dm_slave_be;
+  logic [128-1:0]       dm_slave_addr;
+  logic [128/8-1:0]     dm_slave_be;
   logic [64-1:0]       dm_slave_wdata;
   logic [64-1:0]       dm_slave_rdata;
 
   logic                dm_master_req;
-  logic [64-1:0]       dm_master_add;
+  logic [128-1:0]       dm_master_add;
   logic                dm_master_we;
   logic [64-1:0]       dm_master_wdata;
-  logic [64/8-1:0]     dm_master_be;
+  logic [128/8-1:0]     dm_master_be;
   logic                dm_master_gnt;
   logic                dm_master_r_valid;
   logic [64-1:0]       dm_master_r_rdata;
@@ -496,7 +496,7 @@ module ariane_testharness #(
   // AXI Xbar
   // ---------------
 
-  axi_pkg::xbar_rule_64_t [ariane_soc::NB_PERIPHERALS-1:0] addr_map;
+  axi_pkg::xbar_rule_128_t [ariane_soc::NB_PERIPHERALS-1:0] addr_map;
 
   assign addr_map = '{
     '{ idx: ariane_soc::Debug,    start_addr: ariane_soc::DebugBase,    end_addr: ariane_soc::DebugBase + ariane_soc::DebugLength       },
@@ -529,7 +529,7 @@ module ariane_testharness #(
   axi_xbar_intf #(
     .AXI_USER_WIDTH ( AXI_USER_WIDTH          ),
     .Cfg            ( AXI_XBAR_CFG            ),
-    .rule_t         ( axi_pkg::xbar_rule_64_t )
+    .rule_t         ( axi_pkg::xbar_rule_128_t )
   ) i_axi_xbar (
     .clk_i                 ( clk_i      ),
     .rst_ni                ( ndmreset_n ),
@@ -642,7 +642,7 @@ module ariane_testharness #(
     .clk_i                ( clk_i               ),
     .rst_ni               ( ndmreset_n          ),
     .boot_addr_i          ( ariane_soc::ROMBase ), // start fetching from ROM
-    .hart_id_i            ( {56'h0, hart_id}    ),
+    .hart_id_i            ( {59'h0, hart_id}    ),
     .irq_i                ( irqs                ),
     .ipi_i                ( ipi                 ),
     .time_irq_i           ( timer_irq           ),

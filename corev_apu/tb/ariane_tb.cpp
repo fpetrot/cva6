@@ -342,11 +342,13 @@ done_processing:
   long long addr;
   long long len;
 
-  size_t mem_size = 0xFFFFFF;
+  size_t mem_size = 0x010000;
   while(get_section(&addr, &len))
   {
-    if (addr == 0x80000000)
-        read_section_void(addr, (void *) MEM , mem_size);
+    if (addr == 0x80000000) {
+      read_section_void(addr, (void *) MEM , mem_size);
+    }
+      
     if (addr == 0x84000000)
         try {
           read_section_void(addr, (void *) MEM_USER , mem_size);

@@ -88,7 +88,7 @@ module cva6_rvfi
   logic branch_valid_iti;
   logic is_taken_iti;
   logic [CVA6Cfg.XLEN-1:0] tval_iti;
-  logic [63:0] time_iti;
+  logic [127:0] time_iti;
 
   riscv::priv_lvl_t priv_lvl;
 

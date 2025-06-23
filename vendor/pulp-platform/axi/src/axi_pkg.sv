@@ -407,6 +407,13 @@ package axi_pkg;
     int unsigned   NoAddrRules;
   } xbar_cfg_t;
 
+   /// Commonly used rule types for `axi_xbar` (128-bit addresses).
+  typedef struct packed {
+    int unsigned idx;
+    logic [127:0] start_addr;
+    logic [127:0] end_addr;
+  } xbar_rule_128_t;
+
   /// Commonly used rule types for `axi_xbar` (64-bit addresses).
   typedef struct packed {
     int unsigned idx;
