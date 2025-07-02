@@ -29,7 +29,7 @@ module ariane_testharness #(
   parameter int unsigned AXI_USER_WIDTH    = CVA6Cfg.AxiUserWidth,
   parameter int unsigned AXI_USER_EN       = CVA6Cfg.AXI_USER_EN,
   parameter int unsigned AXI_ADDRESS_WIDTH = 128,
-  parameter int unsigned AXI_DATA_WIDTH    = 64,
+  parameter int unsigned AXI_DATA_WIDTH    = 128,
   parameter bit          InclSimDTM        = 1'b1,
   parameter int unsigned NUM_WORDS         = 2**12,         // memory size
   parameter bit          StallRandomOutput = 1'b0,
@@ -419,7 +419,7 @@ module ariane_testharness #(
     .AXI_ID_WIDTH   ( ariane_axi_soc::IdWidthSlave ),
     .AXI_USER_WIDTH ( AXI_USER_WIDTH               ),
     .AXI_MAX_WRITE_TXNS ( 1  ),
-    .RISCV_WORD_WIDTH   ( 64 )
+    .RISCV_WORD_WIDTH   ( 128 )
   ) i_axi_riscv_atomics (
     .clk_i,
     .rst_ni ( ndmreset_n               ),

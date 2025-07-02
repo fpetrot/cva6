@@ -19,7 +19,7 @@
 // `FPGA_TARGET_ALTERA in your build environment (default is ALTERA)
 
 module sram #(
-    parameter DATA_WIDTH = 64,
+    parameter DATA_WIDTH = 128,
     parameter USER_WIDTH = 1,
     parameter USER_EN    = 0,
     parameter NUM_WORDS  = 1024,
@@ -38,7 +38,7 @@ module sram #(
    output logic [DATA_WIDTH-1:0]         rdata_o
 );
 
-localparam DATA_WIDTH_ALIGNED = ((DATA_WIDTH+63)/64)*64;
+localparam DATA_WIDTH_ALIGNED = ((DATA_WIDTH+127)/128)*128;
 localparam USER_WIDTH_ALIGNED = DATA_WIDTH_ALIGNED; // To be fine tuned to reduce memory size
 localparam BE_WIDTH_ALIGNED   = (((DATA_WIDTH+7)/8+7)/8)*8;
 
@@ -62,11 +62,11 @@ always_comb begin : p_align
     ruser_o = ruser_aligned[USER_WIDTH-1:0];
 end
 
-  for (genvar k = 0; k<(DATA_WIDTH+63)/64; k++) begin : gen_cut
+  for (genvar k = 0; k<(DATA_WIDTH+127)/128; k++) begin : gen_cut
       // unused byte-enable segments (8bits) are culled by the tool
       tc_sram_wrapper #(
         .NumWords(NUM_WORDS),           // Number of Words in data array
-        .DataWidth(64),                 // Data signal width
+        .DataWidth(128),                 // Data signal width
         .ByteWidth(32'd8),              // Width of a data byte
         .NumPorts(32'd1),               // Number of read and write ports
         .Latency(32'd1),                // Latency when the read data is available
@@ -77,15 +77,15 @@ end
           .rst_ni   ( rst_ni                    ),
           .req_i    ( req_i                     ),
           .we_i     ( we_i                      ),
-          .be_i     ( be_aligned[k*8 +: 8]      ),
-          .wdata_i  ( wdata_aligned[k*64 +: 64] ),
+          .be_i     ( be_aligned[k*16 +: 16]      ),
+          .wdata_i  ( wdata_aligned[k*128 +: 128] ),
           .addr_i   ( addr_i                    ),
-          .rdata_o  ( rdata_aligned[k*64 +: 64] )
+          .rdata_o  ( rdata_aligned[k*128 +: 128] )
       );
       if (USER_EN > 0) begin : gen_mem_user
         tc_sram_wrapper #(
           .NumWords(NUM_WORDS),           // Number of Words in data array
-          .DataWidth(64),                 // Data signal width
+          .DataWidth(128),                 // Data signal width
           .ByteWidth(32'd8),              // Width of a data byte
           .NumPorts(32'd1),               // Number of read and write ports
           .Latency(32'd1),                // Latency when the read data is available
@@ -96,17 +96,17 @@ end
             .rst_ni   ( rst_ni                    ),
             .req_i    ( req_i                     ),
             .we_i     ( we_i                      ),
-            .be_i     ( be_aligned[k*8 +: 8]      ),
-            .wdata_i  ( wuser_aligned[k*64 +: 64] ),
+            .be_i     ( be_aligned[k*16 +: 16]      ),
+            .wdata_i  ( wuser_aligned[k*128 +: 128] ),
             .addr_i   ( addr_i                    ),
-            .rdata_o  ( ruser_aligned[k*64 +: 64] )
+            .rdata_o  ( ruser_aligned[k*128 +: 128] )
         );
       end else begin : gen_mem_user
-          assign ruser_aligned[k*64 +: 64] = '0;
+          assign ruser_aligned[k*128 +: 128] = '0;
           // synthesis translate_off
           begin: i_tc_sram_wrapper_user
             begin: i_tc_sram
-              localparam type data_t = logic [63:0];
+              localparam type data_t = logic [128:0];
               data_t init_val [0:0];
               data_t sram [NUM_WORDS-1:0] /* verilator public_flat */;
             end

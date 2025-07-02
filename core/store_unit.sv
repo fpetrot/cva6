@@ -100,8 +100,8 @@ module store_unit
       4'b0101: data_tmp[CVA6Cfg.XLEN-1:0] = {data[CVA6Cfg.XLEN-41:0], data[CVA6Cfg.XLEN-1:CVA6Cfg.XLEN-40]};
       4'b0110: data_tmp[CVA6Cfg.XLEN-1:0] = {data[CVA6Cfg.XLEN-49:0], data[CVA6Cfg.XLEN-1:CVA6Cfg.XLEN-48]};
       4'b0111: data_tmp[CVA6Cfg.XLEN-1:0] = {data[CVA6Cfg.XLEN-57:0], data[CVA6Cfg.XLEN-1:CVA6Cfg.XLEN-56]};
-      //4'b1000: data_tmp[CVA6Cfg.XLEN-1:0] = {data[CVA6Cfg.XLEN-65:0], data[CVA6Cfg.XLEN-1:CVA6Cfg.XLEN-64]};
-      4'b1000: data_tmp[CVA6Cfg.XLEN-1:0] = {data[CVA6Cfg.XLEN-1:0]};
+      4'b1000: data_tmp[CVA6Cfg.XLEN-1:0] = {data[CVA6Cfg.XLEN-65:0], data[CVA6Cfg.XLEN-1:CVA6Cfg.XLEN-64]};
+      //4'b1000: data_tmp[CVA6Cfg.XLEN-1:0] = {data[CVA6Cfg.XLEN-1:0]};
       4'b1001: data_tmp[CVA6Cfg.XLEN-1:0] = {data[CVA6Cfg.XLEN-73:0], data[CVA6Cfg.XLEN-1:CVA6Cfg.XLEN-72]};
       4'b1010: data_tmp[CVA6Cfg.XLEN-1:0] = {data[CVA6Cfg.XLEN-81:0], data[CVA6Cfg.XLEN-1:CVA6Cfg.XLEN-80]};
       4'b1011: data_tmp[CVA6Cfg.XLEN-1:0] = {data[CVA6Cfg.XLEN-89:0], data[CVA6Cfg.XLEN-1:CVA6Cfg.XLEN-88]};
