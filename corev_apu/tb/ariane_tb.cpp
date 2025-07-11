@@ -29,6 +29,7 @@
 #endif
 #include "Variane_testharness__Dpi.h"
 
+#include <fstream>
 #include <stdio.h>
 #include <iostream>
 #include <iomanip>
@@ -284,7 +285,7 @@ done_processing:
 
   std::unique_ptr<Variane_testharness> top(new Variane_testharness);
 
-  read_elf(htif_argv[1]);
+  //read_elf(htif_argv[1]);
 
 #if VM_TRACE
   Verilated::traceEverOn(true); // Verilator must compute traced signals
@@ -341,8 +342,22 @@ done_processing:
 #endif
   long long addr;
   long long len;
+      
+  std::ifstream file("/home/fred/riscvbareapps/hello_world/build/hello.bin", std::ios::binary | std::ios::ate);
+  std::streamsize size = file.tellg();
+  file.seekg(0, std::ios::beg);
 
-  size_t mem_size = 0x010000;
+  std::vector<char> buffer(size);
+  if (file.read(buffer.data(), size))
+  {
+      /* worked! */
+  }
+  for(int i = 0; i < buffer.size(); i++){
+    char *ptr = ((char*)(void *)MEM) + i; //0x80000000;
+    *ptr = buffer[i];
+  }
+
+  /*size_t mem_size = 0x010000;
   while(get_section(&addr, &len))
   {
     if (addr == 0x80000000) {
@@ -355,7 +370,7 @@ done_processing:
         } catch (...){
           std::cerr << "No user memory instanciated ...\n";
         }
-  }
+  }*/
 
   while (!dtm->done() && !jtag->done() && !(top->exit_o & 0x1)) {
     top->clk_i = 0;
