@@ -30,7 +30,7 @@ package cva6_config_pkg;
   localparam CVA6ConfigHExtEn = 0;
   localparam CVA6ConfigBExtEn = 0;
   localparam CVA6ConfigVExtEn = 0;
-  localparam CVA6ConfigRVZiCond = 1;
+  localparam CVA6ConfigRVZiCond = 0;
 
   localparam CVA6ConfigAxiIdWidth = 4;
   localparam CVA6ConfigAxiAddrWidth = 128;
@@ -79,7 +79,7 @@ package cva6_config_pkg;
 
   localparam config_pkg::cva6_user_cfg_t cva6_cfg = '{
       XLEN: unsigned'(CVA6ConfigXlen),
-      VLEN: unsigned'(64),
+      VLEN: unsigned'(128),
       FpgaEn: bit'(0),  // for Xilinx and Altera
       FpgaAlteraEn: bit'(0),  // for Altera (only)
       TechnoCut: bit'(0),
@@ -109,13 +109,13 @@ package cva6_config_pkg;
       CvxifEn: bit'(CVA6ConfigCvxifEn),
       CoproType: config_pkg::COPRO_NONE,
       RVZiCond: bit'(CVA6ConfigRVZiCond),
-      RVZicntr: bit'(1),
-      RVZihpm: bit'(1),
+      RVZicntr: bit'(0),
+      RVZihpm: bit'(0),
       NrScoreboardEntries: unsigned'(CVA6ConfigNrScoreboardEntries),
       PerfCounterEn: bit'(CVA6ConfigPerfCounterEn),
       MmuPresent: bit'(CVA6ConfigMmuPresent),
-      RVS: bit'(1),
-      RVU: bit'(1),
+      RVS: bit'(0),
+      RVU: bit'(0),
       SoftwareInterruptEn: bit'(1),
       HaltAddress: 128'h800,
       ExceptionAddress: 128'h808,

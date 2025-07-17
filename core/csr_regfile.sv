@@ -312,9 +312,8 @@ module csr_regfile
   // ----------------
   // CSR Read logic
   // ----------------
-  assign mstatus_extended = (CVA6Cfg.XLEN == 128) ? mstatus_q[CVA6Cfg.XLEN-1:0] :
-                            (CVA6Cfg.XLEN == 64) ?  {mstatus_q.sd, mstatus_q[CVA6Cfg.XLEN-2:0]}:
-                              {mstatus_q.sd, mstatus_q.wpri3[7:0], mstatus_q[22:0]};
+  assign mstatus_extended = (CVA6Cfg.XLEN > 32) ?  {mstatus_q.sd, mstatus_q[CVA6Cfg.XLEN-2:0]}:
+                            {mstatus_q.sd, mstatus_q.wpri3[7:0], mstatus_q[22:0]};
   if (CVA6Cfg.RVH) begin
     if (CVA6Cfg.XLEN == 128 || CVA6Cfg.XLEN == 64) begin : gen_vsstatus_64read
       assign vsstatus_extended = vsstatus_q[CVA6Cfg.XLEN-1:0];
@@ -784,9 +783,8 @@ module csr_regfile
           automatic logic [3:0] index = csr_addr.address[11:0] - riscv::CSR_PMPCFG0;
 
           // if index is not even and XLEN==64, raise exception
-          if ((CVA6Cfg.XLEN == 64  && index[0]  == 1'b1) ||  // XLEN=64 → must be even
-            (CVA6Cfg.XLEN == 128 && index[1:0] != 2'b00))   // XLEN=128 → must be multiple of 4
-            begin
+          if ((CVA6Cfg.XLEN == 64  && index[0]  == 1'b1) ||  // XLEN=64 must be even
+            (CVA6Cfg.XLEN == 128 && index[1:0] != 2'b00)) begin  // XLEN=128 must be multiple of 4
               read_access_exception = 1'b1;
             
           end else begin
@@ -1524,11 +1522,11 @@ module csr_regfile
         // performance counters
         riscv::CSR_MCYCLE: cycle_d[CVA6Cfg.XLEN-1:0] = csr_wdata;
         riscv::CSR_MCYCLEH:
-        if (CVA6Cfg.XLEN == 32) cycle_d[63:32] = csr_wdata;
+        if (CVA6Cfg.XLEN == 32) cycle_d[127:96] = csr_wdata;
         else update_access_exception = 1'b1;
         riscv::CSR_MINSTRET: instret_d[CVA6Cfg.XLEN-1:0] = csr_wdata;
         riscv::CSR_MINSTRETH:
-        if (CVA6Cfg.XLEN == 32) instret_d[63:32] = csr_wdata;
+        if (CVA6Cfg.XLEN == 32) instret_d[127:96] = csr_wdata;
         else update_access_exception = 1'b1;
         //Event Selector
         riscv::CSR_MHPM_EVENT_3,

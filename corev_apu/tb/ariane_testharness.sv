@@ -31,7 +31,7 @@ module ariane_testharness #(
   parameter int unsigned AXI_ADDRESS_WIDTH = 128,
   parameter int unsigned AXI_DATA_WIDTH    = 128,
   parameter bit          InclSimDTM        = 1'b1,
-  parameter int unsigned NUM_WORDS         = 2**12,         // memory size
+  parameter int unsigned NUM_WORDS         = 2**20,         // memory size
   parameter bit          StallRandomOutput = 1'b0,
   parameter bit          StallRandomInput  = 1'b0
 ) (

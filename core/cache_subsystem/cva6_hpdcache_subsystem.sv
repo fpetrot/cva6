@@ -201,7 +201,7 @@ module cva6_hpdcache_subsystem
     userCfg.reqTransIdWidth = CVA6Cfg.DcacheIdWidth;
     userCfg.reqSrcIdWidth = 3;  // Up to 8 requesters
     userCfg.victimSel = hpdcache_pkg::HPDCACHE_VICTIM_RANDOM;
-    userCfg.dataWaysPerRamWord = __minu(CVA6Cfg.DCACHE_SET_ASSOC, 128 / CVA6Cfg.XLEN);
+    userCfg.dataWaysPerRamWord = __minu(CVA6Cfg.DCACHE_SET_ASSOC, 128 / userCfg.wordWidth);
     userCfg.dataSetsPerRam = CVA6Cfg.DCACHE_NUM_WORDS;
     userCfg.dataRamByteEnable = 1'b1;
     userCfg.accessWords = __maxu(CVA6Cfg.AxiDataWidth / userCfg.wordWidth, 1  /*reqWords*/);
