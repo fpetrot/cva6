@@ -342,8 +342,12 @@ done_processing:
 #endif
   long long addr;
   long long len;
+
+#define ELF getenv("ELF")
+
+  printf("%s \n", ELF);
       
-  std::ifstream file("/home/fred/riscvbareapps/hello_world/build/hello.bin", std::ios::binary | std::ios::ate);
+  std::ifstream file(ELF, std::ios::binary | std::ios::ate);
   std::streamsize size = file.tellg();
   file.seekg(0, std::ios::beg);
 

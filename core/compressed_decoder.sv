@@ -404,6 +404,7 @@ module compressed_decoder #(
 
           riscv::OpcodeC1Addiw: begin  // or riscv::OpcodeC1Jal for RV32IC
             if (CVA6Cfg.IS_XLEN64 || CVA6Cfg.IS_XLEN128) begin
+              // sext.w
               // c.addiw -> addiw rd, rd, nzimm for RV64IC
               if (instr_i[11:7] != 5'h0) begin  // only valid if the destination is not r0
                 instr_o = {
@@ -433,9 +434,6 @@ module compressed_decoder #(
                 5'b1,
                 riscv::OpcodeJal
               };
-
-
-
             end
           end
 
