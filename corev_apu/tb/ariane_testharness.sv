@@ -238,17 +238,17 @@ module ariane_testharness #(
   logic                dm_slave_we;
   logic [128-1:0]       dm_slave_addr;
   logic [128/8-1:0]     dm_slave_be;
-  logic [64-1:0]       dm_slave_wdata;
-  logic [64-1:0]       dm_slave_rdata;
+  logic [128-1:0]       dm_slave_wdata;
+  logic [128-1:0]       dm_slave_rdata;
 
   logic                dm_master_req;
   logic [128-1:0]       dm_master_add;
   logic                dm_master_we;
-  logic [64-1:0]       dm_master_wdata;
+  logic [128-1:0]       dm_master_wdata;
   logic [128/8-1:0]     dm_master_be;
   logic                dm_master_gnt;
   logic                dm_master_r_valid;
-  logic [64-1:0]       dm_master_r_rdata;
+  logic [128-1:0]       dm_master_r_rdata;
 
   // debug module
   dm_top #(

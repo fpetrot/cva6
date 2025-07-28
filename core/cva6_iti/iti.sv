@@ -42,7 +42,7 @@ module cva6_iti #(
     iti_pkg::itype_t         itype;
     logic                    compressed;
     riscv::priv_lvl_t        priv;
-    logic [63:0]             cycles;
+    logic [127:0]             cycles;
   };
 
   /* Structure used to output trace_signals if special instr */
@@ -55,7 +55,7 @@ module cva6_iti #(
     riscv::priv_lvl_t        priv;
     logic [CAUSE_LEN-1:0]    cause;
     logic [CVA6Cfg.XLEN-1:0] tval;
-    logic [63:0]             cycles;
+    logic [127:0]             cycles;
   };
 
   logic interrupt;
