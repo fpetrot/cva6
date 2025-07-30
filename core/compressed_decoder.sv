@@ -481,7 +481,8 @@ module compressed_decoder #(
                 instr_o = {
                   1'b0,
                   instr_i[10],
-                  4'b0,
+                  3'b0,
+                  CVA6Cfg.IS_XLEN128 ? ((instr_i[12] == 0) && (instr_i[6:2] == 5'b0) ? 1'b1 : instr_i[12]) : 1'b0,
                   instr_i[12],
                   instr_i[6:2],
                   2'b01,
@@ -803,7 +804,8 @@ module compressed_decoder #(
           riscv::OpcodeC2Slli: begin
             // c.slli -> slli rd, rd, shamt
             instr_o = {
-              6'b0,
+              5'b0,
+              CVA6Cfg.IS_XLEN128 && (instr_i[12] == 0) && (instr_i[6:2] == 5'b0) ? 1'b1 : 1'b0,
               instr_i[12],
               instr_i[6:2],
               instr_i[11:7],
@@ -819,16 +821,24 @@ module compressed_decoder #(
             // RV64 & RV 32 
             //   c.fldsp -> fld fprd, imm(x2)
             if (CVA6Cfg.IS_XLEN128) begin
+
               instr_o = {
-                3'b0,
-                instr_i[4:2],
+                // imm 
+                2'b00,
+                instr_i[5:2],
                 instr_i[12],
-                instr_i[6:5],
-                3'b000,
+                instr_i[6],
+                4'b0000,
+                
+                // sp
                 5'h02,
+
+                // fct3
                 3'b010,
+
+                //rd
                 instr_i[11:7],
-                7'b00_011_11 // OpcodeLoadQuad
+                7'b00_011_11 // OpcodeLoadQuad              
               };
               if (instr_i[11:7] == 5'b0) illegal_instr_o = 1'b1;
             end else begin
@@ -937,16 +947,22 @@ module compressed_decoder #(
             // RV64 & RV32
             //   c.fsdsp -> fsw fprs2, imm(x2)
             if(CVA6Cfg.IS_XLEN128) begin
-                // c.sqsp
-                instr_o = {
-                3'b0,
-                instr_i[9:7],
+              //c.spsq
+              instr_o = {
+                // imm [31:25]
+                2'b0,
+                instr_i[10:7],
                 instr_i[12],
-                instr_i[6:2],
+                //rs1
+                instr_i[6:2], 
+                // sp
                 5'h02,
+                // func3
                 3'b100,
-                instr_i[11:10],
-                3'b000,
+                // imm [4:0]
+                instr_i[11],
+                4'b0000,
+                //opcode
                 riscv::OpcodeStore
               };
 
