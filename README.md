@@ -1,3 +1,45 @@
+# README - Simulation du cœur CVA6
+
+Ce guide décrit les étapes nécessaires pour configurer l'environnement, compiler le cœur CVA6-128 bits, choisir un programme à exécuter, puis lancer la simulation.
+
+## 1. Sourcer l’environnement
+
+Avant toute opération, il faut sourcer les scripts d’environnement :
+
+```bash
+source verif/sim/setup-env128.sh
+source verif/sim/setup-env.sh
+```
+
+## 2. Compiler le cœur
+
+Lancer la commande suivante pour générer le cœur CVA6 en utilisant Verilator :
+
+```bash
+make -C $HOME/cva6/ verilate verilator="verilator --no-timing" target=cv128
+```
+
+## 3. Choisir le programme à exécuter
+
+Définir la variable d’environnement `ELF` avec le chemin vers le binaire à exécuter :
+
+```bash
+export ELF=/binary/prog/to/run
+```
+
+Remplacez `/binary/prog/to/run` par le chemin réel vers votre binaire.
+
+## 4. Lancer la simulation
+
+Utilisez la commande suivante pour exécuter la simulation :
+
+```bash
+./work-ver/Variane_testharness $ELF ++$ELF +elf_file=$ELF +debug_disable=1 +core_name=cv128 +tohost_addr=8000f390
+```
+
+> ⚠️ **Important :** L’adresse `+tohost_addr` doit impérativement être correctement définie. Si elle est incorrecte, la simulation ne se termine pas correctement.
+
+
 # CVA6 RISC-V CPU [![Build Status](https://github.com/openhwgroup/cva6/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/openhwgroup/cva6/actions/workflows/ci.yml) [![CVA6 dashboard](https://riscv-ci.pages.thales-invia.fr/dashboard/badge_master.svg)](https://riscv-ci.pages.thales-invia.fr/dashboard/dashboard_cva6.html) [![Documentation Status](https://readthedocs.com/projects/openhw-group-cva6-user-manual/badge/?version=latest)](https://docs.openhwgroup.org/projects/cva6-user-manual/?badge=latest) [![GitHub release](https://img.shields.io/github/release/openhwgroup/cva6?include_prereleases=&sort=semver&color=blue)](https://github.com/openhwgroup/cva6/releases/)
 
 CVA6 is a 6-stage, single-issue, in-order CPU which implements the 64-bit RISC-V instruction set. It fully implements I, M, A and C extensions as specified in Volume I: User-Level ISA V 2.3 as well as the draft privilege extension 1.10. It implements three privilege levels M, S, U to fully support a Unix-like operating system. Furthermore, it is compliant to the draft external debug spec 0.13.
