@@ -1,43 +1,43 @@
-# README - Simulation du cœur CVA6
+# README - CVA6 Core Simulation
 
-Ce guide décrit les étapes nécessaires pour configurer l'environnement, compiler le cœur CVA6-128 bits, choisir un programme à exécuter, puis lancer la simulation.
+This guide describes the steps required to set up the environment, compile the 128-bit CVA6 core, choose a program to run, and launch the simulation.
 
-## 1. Sourcer l’environnement
+## 1. Source the Environment
 
-Avant toute opération, il faut sourcer les scripts d’environnement :
+Before proceeding, source the environment setup scripts:
 
 ```bash
 source verif/sim/setup-env128.sh
 source verif/sim/setup-env.sh
 ```
 
-## 2. Compiler le cœur
+## 2. Build the Core
 
-Lancer la commande suivante pour générer le cœur CVA6 en utilisant Verilator :
+Run the following command to generate the CVA6 core using Verilator:
 
 ```bash
 make -C $HOME/cva6/ verilate verilator="verilator --no-timing" target=cv128
 ```
 
-## 3. Choisir le programme à exécuter
+## 3. Choose the Program to Run
 
-Définir la variable d’environnement `ELF` avec le chemin vers le binaire à exécuter :
+Set the `ELF` environment variable to the path of the binary you want to run:
 
 ```bash
 export ELF=/binary/prog/to/run
 ```
 
-Remplacez `/binary/prog/to/run` par le chemin réel vers votre binaire.
+Replace `/binary/prog/to/run` with the actual path to your ELF binary.
 
-## 4. Lancer la simulation
+## 4. Launch the Simulation
 
-Utilisez la commande suivante pour exécuter la simulation :
+Run the simulation with the following command:
 
 ```bash
 ./work-ver/Variane_testharness $ELF ++$ELF +elf_file=$ELF +debug_disable=1 +core_name=cv128 +tohost_addr=8000f390
 ```
 
-> ⚠️ **Important :** L’adresse `+tohost_addr` doit impérativement être correctement définie. Si elle est incorrecte, la simulation ne se termine pas correctement.
+> ⚠️ **Important:** The `+tohost_addr` value must be set correctly. If it is incorrect, the simulation will not complete properly.
 
 
 # CVA6 RISC-V CPU [![Build Status](https://github.com/openhwgroup/cva6/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/openhwgroup/cva6/actions/workflows/ci.yml) [![CVA6 dashboard](https://riscv-ci.pages.thales-invia.fr/dashboard/badge_master.svg)](https://riscv-ci.pages.thales-invia.fr/dashboard/dashboard_cva6.html) [![Documentation Status](https://readthedocs.com/projects/openhw-group-cva6-user-manual/badge/?version=latest)](https://docs.openhwgroup.org/projects/cva6-user-manual/?badge=latest) [![GitHub release](https://img.shields.io/github/release/openhwgroup/cva6?include_prereleases=&sort=semver&color=blue)](https://github.com/openhwgroup/cva6/releases/)
