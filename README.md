@@ -39,6 +39,22 @@ Run the simulation with the following command:
 
 > ⚠️ **Important:** The `+tohost_addr` value must be set correctly. If it is incorrect, the simulation will not complete properly.
 
+## ⚠️ Prerequisites & Important Checks
+
+Before starting, please ensure the following:
+
+- **Stack size limit:** You can increase the limit with:
+  ```bash
+  ulimit -s unlimited
+  ```
+- **Verilator installation:** Make sure Verilator is installed correctly. You can install it using:
+  ```bash
+  bash ci/install-verilator.sh
+  ```
+- **Spike installation:** You can install it using:
+  ```bash
+  bash ci/install-spike.sh
+  ```
 
 # CVA6 RISC-V CPU [![Build Status](https://github.com/openhwgroup/cva6/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/openhwgroup/cva6/actions/workflows/ci.yml) [![CVA6 dashboard](https://riscv-ci.pages.thales-invia.fr/dashboard/badge_master.svg)](https://riscv-ci.pages.thales-invia.fr/dashboard/dashboard_cva6.html) [![Documentation Status](https://readthedocs.com/projects/openhw-group-cva6-user-manual/badge/?version=latest)](https://docs.openhwgroup.org/projects/cva6-user-manual/?badge=latest) [![GitHub release](https://img.shields.io/github/release/openhwgroup/cva6?include_prereleases=&sort=semver&color=blue)](https://github.com/openhwgroup/cva6/releases/)
 
