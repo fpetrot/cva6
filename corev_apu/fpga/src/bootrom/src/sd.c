@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 
+#if 0
 #include "sd.h"
 #include "spi.h"
 #include "uart.h"
@@ -210,3 +211,4 @@ int sd_copy(void *dst, uint32_t src_lba, uint32_t size)
     sd_dummy();
     return rc;
 }
+#endif

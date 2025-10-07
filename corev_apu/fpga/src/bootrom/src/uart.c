@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 
+#if 0
 #include "uart.h"
 
 void write_reg_u8(uintptr_t addr, uint8_t value)
@@ -120,3 +121,4 @@ void print_uart_byte(uint8_t byte)
     write_serial(hex[0]);
     write_serial(hex[1]);
 }
+#endif

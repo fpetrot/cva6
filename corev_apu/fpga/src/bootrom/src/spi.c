@@ -1,7 +1,7 @@
 // Copyright OpenHW Group contributors.
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
-
+#if 0
 #include "spi.h"
 
 #include "uart.h"
@@ -133,3 +133,4 @@ int spi_write_bytes(uint8_t *bytes, uint32_t len, uint8_t *ret)
 
     return 0;
 }
+#endif

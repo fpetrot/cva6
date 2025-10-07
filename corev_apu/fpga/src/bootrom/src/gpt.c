@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 
+#if 0
 #include "gpt.h"
 
 #include "sd.h"
@@ -110,3 +111,4 @@ int gpt_find_boot_partition(uint8_t* dest, uint32_t size)
     print_uart(" done!\r\n");
     return 0;
 }
+#endif

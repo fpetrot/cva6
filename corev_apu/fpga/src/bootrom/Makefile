@@ -22,7 +22,12 @@ OBJCOPY ?= $(RISCV)/bin/$(CROSSCOMPILE)objcopy
 SED = sed
 PLATFORM_DEFINES = -DCLOCK_FREQUENCY=$(CLOCK_FREQUENCY) -DUART_BITRATE=$(UART_BITRATE) -D$(PLATFORM)
 
-ifeq ($(XLEN), 64)
+ifeq ($(XLEN), 128)
+CROSSCOMPILE = riscv128-unknown-elf-
+CC = /home/fred/sandbox/bin/${CROSSCOMPILE}gcc
+OBJCOPY = /home/fred/sandbox/bin/$(CROSSCOMPILE)objcopy
+CFLAGS = $(PLATFORM_DEFINES) -Os -ggdb -march=rv128im_zicsr -mabi=llp128 -Wall -mcmodel=medany -mexplicit-relocs -ffreestanding
+else ifeq ($(XLEN), 64)
 CFLAGS = $(PLATFORM_DEFINES) -Os -ggdb -march=rv64im_zicsr -mabi=lp64 -Wall -mcmodel=medany -mexplicit-relocs -ffreestanding
 else
 CFLAGS = $(PLATFORM_DEFINES) -O2 -ggdb  -march=rv32im_zicsr -mabi=ilp32 -W -Wall -mcmodel=medany -mexplicit-relocs -fno-builtin -ffreestanding

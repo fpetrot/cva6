@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 
+#if 0
 #include "uart.h"
 #include "spi.h"
 #include "sd.h"
@@ -98,3 +99,9 @@ void handle_trap(void)
 {
     // print_uart("trap\r\n");
 }
+#else
+int main()
+{
+   return 0;
+}
+#endif
