@@ -35,6 +35,7 @@ WORKDIR /work
 
 # Create directories
 RUN mkdir -p $INSTPATH $ROOTSRCS $BINBUILD $VERILATOR_TMP
+RUN mkdir /.venv && chown 1000:1000 /.venv
 
 #
 # Dependencies
@@ -74,6 +75,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends --
     bc \
     bison \
     build-essential \
+    cmake \
     device-tree-compiler \
     flex \
     gawk \

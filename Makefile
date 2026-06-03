@@ -831,8 +831,8 @@ dk-run:
 
 # create docker environnement
 env-python:
-	python3 -m venv .venv
-	/work/.venv/bin/pip3 install -r verif/sim/dv/requirements.txt
+	python3 -m venv ../.venv
+	../.venv/bin/pip3 install -r verif/sim/dv/requirements.txt
 
 clean:
 	rm -rf $(riscv-torture-dir)/output/test*

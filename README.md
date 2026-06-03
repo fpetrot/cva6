@@ -70,6 +70,7 @@ can be installed with `make`:
 
 ```bash
 make env-python
+source .venv/bin/activate
 ```
 
 ## 5. Verilator, Spike installations and stack size
