@@ -35,7 +35,7 @@ WORKDIR /work
 
 # Create directories
 RUN mkdir -p $INSTPATH $ROOTSRCS $BINBUILD $VERILATOR_TMP
-RUN mkdir /.venv && chown 1000:1000 /.venv
+RUN mkdir /.venv && chmod 777 /.venv
 
 #
 # Dependencies
@@ -51,6 +51,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends --
     less \
     help2man \
     nano \
+    vim \
     sudo
 
 # network dependencies
