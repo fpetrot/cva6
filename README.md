@@ -1,45 +1,78 @@
-# README - CVA6 Core Simulation
+# CVA6 128 RISC-V CPU
+
+CVA6 128 is a 6-stage, single-issue, in-order CPU which implements the 128-bit RISC-V instruction set. It is implemented on the 64-bits CVA6 version.
+
+<img src="docs/03_cva6_design/_static/ariane_overview.drawio.png"/>
+
+# Quick setup
 
 This guide describes the steps required to set up the environment, compile the 128-bit CVA6 core, choose a program to run, and launch the simulation.
 
-## 1. Source the Environment
+Throughout all build and simulations scripts executions, you can use the environment variable `NUM_JOBS` to set the number of concurrent jobs launched by `make`:
+
+- if left undefined, `NUM_JOBS` will default to 1, resulting in a sequential execution
+  of `make` jobs;
+- when setting `NUM_JOBS` to an explicit value, it is recommended not to exceed 2/3 of
+  the total number of virtual cores available on your system.
+
+## 1. Get the CVA6 128
+
+Checkout the repository and initialize all submodules.
+
+```bash
+git clone https://github.com/fpetrot/cva6.git
+cd cva6
+git submodule update --init --recursive
+```
+
+## 2. Get the 128 bits toolchain
+
+We assume that the 128 bits RISC-V toolchain is in `/path/to/cva6/tools/toolchain`.
+In the future the toolchain compilation will be directly integrated in the 128 bits project.
+
+## 3. Docker initialization
+
+To run properly the CVA6 we choose to use a docker environment, it needs to be initialized properly.
+To do so you can use `make` :
+
+```bash
+make dk-create-image
+```
+
+This command creates the docker image and installs an environment to run the CVA6.
+But for convenience the docker container do not clone the CVA6 128 and use directly the project
+files right here, so there are still work to be done in the docker before launch any simulation.
+
+## 4. Docker container environment setup
+
+Launch the docker container with `make` :
+
+```bash
+make dk-run
+```
+
+By default, `RISCV` and `CVA6_REPO_DIR` variables are defined in the `/.bashrc`.
+Those variables are very important because they defined where the toolchain is installed and where is the project root respectively.
 
 Before proceeding, source the environment setup scripts:
 
 ```bash
-source verif/sim/setup-env128.sh
+source verif/sim/setup-env-toolchain.sh
 source verif/sim/setup-env.sh
+source verif/sim/simulation-parameters.sh
 ```
 
-## 2. Build the Core
+NB: `verif/sim/setup-env-toolchain.sh` must come before `verif/sim/setup-env.sh` because
+`setup-env.sh` use paths defined in `verif/sim/setup-env-toolchain.sh`.
 
-Run the following command to generate the CVA6 core using Verilator:
+CVA6 project use Python to execute multiple tests. We use a specific Python environment to do so and
+can be installed with `make`:
 
 ```bash
-make -C $HOME/cva6/ verilate verilator="verilator --no-timing" target=cv128
+make env-python
 ```
 
-## 3. Choose the Program to Run
-
-Set the `ELF` environment variable to the path of the binary you want to run:
-
-```bash
-export ELF=/binary/prog/to/run
-```
-
-Replace `/binary/prog/to/run` with the actual path to your ELF binary.
-
-## 4. Launch the Simulation
-
-Run the simulation with the following command:
-
-```bash
-./work-ver/Variane_testharness $ELF ++$ELF +elf_file=$ELF +debug_disable=1 +core_name=cv128 +tohost_addr=8000f390
-```
-
-> ⚠️ **Important:** The `+tohost_addr` value must be set correctly. If it is incorrect, the simulation will not complete properly.
-
-## ⚠️ Prerequisites & Important Checks
+## 5. Verilator, Spike installations and stack size
 
 Before starting, please ensure the following:
 
@@ -56,6 +89,36 @@ Before starting, please ensure the following:
   bash ci/install-spike.sh
   ```
 
+## 6. Build the Core
+
+Run the following command to generate the CVA6 core using Verilator:
+
+```bash
+make -C /work verilate verilator="verilator --no-timing" target=cv128
+```
+
+## 7. Choose the Program to Run
+
+Set the `ELF` environment variable to the path of the binary you want to run:
+
+```bash
+export ELF=/binary/prog/to/run
+```
+
+Replace `/binary/prog/to/run` with the actual path to your ELF binary.
+
+## 8. Launch the Simulation
+
+Run the simulation with the following command:
+
+```bash
+./work-ver/Variane_testharness $ELF ++$ELF +elf_file=$ELF +debug_disable=1 +core_name=cv128 +tohost_addr=8000f390
+```
+
+> ⚠️ **Important:** The `+tohost_addr` value must be set correctly. If it is incorrect, the simulation will not complete properly.
+
+# CVA6 Original README
+
 # CVA6 RISC-V CPU [![Build Status](https://github.com/openhwgroup/cva6/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/openhwgroup/cva6/actions/workflows/ci.yml) [![CVA6 dashboard](https://riscv-ci.pages.thales-invia.fr/dashboard/badge_master.svg)](https://riscv-ci.pages.thales-invia.fr/dashboard/dashboard_cva6.html) [![Documentation Status](https://readthedocs.com/projects/openhw-group-cva6-user-manual/badge/?version=latest)](https://docs.openhwgroup.org/projects/cva6-user-manual/?badge=latest) [![GitHub release](https://img.shields.io/github/release/openhwgroup/cva6?include_prereleases=&sort=semver&color=blue)](https://github.com/openhwgroup/cva6/releases/)
 
 CVA6 is a 6-stage, single-issue, in-order CPU which implements the 64-bit RISC-V instruction set. It fully implements I, M, A and C extensions as specified in Volume I: User-Level ISA V 2.3 as well as the draft privilege extension 1.10. It implements three privilege levels M, S, U to fully support a Unix-like operating system. Furthermore, it is compliant to the draft external debug spec 0.13.
@@ -69,18 +132,23 @@ It can be used to investigate performance-related micro-architecture changes.
 
 <img src="docs/03_cva6_design/_static/ariane_overview.drawio.png"/>
 
-
 # Quick setup
 
 The following instructions will allow you to compile and run a Verilator model of the CVA6 APU (which instantiates the CVA6 core) within the CVA6 APU testbench (corev_apu/tb).
 
 Throughout all build and simulations scripts executions, you can use the environment variable `NUM_JOBS` to set the number of concurrent jobs launched by `make`:
+
 - if left undefined, `NUM_JOBS` will default to 1, resulting in a sequential execution
-of `make` jobs;
+  of `make` jobs;
 - when setting `NUM_JOBS` to an explicit value, it is recommended not to exceed 2/3 of
-the total number of virtual cores available on your system.    
+<<<<<<< HEAD
+the total number of virtual cores available on your system.
+=======
+  the total number of virtual cores available on your system.
+>>>>>>> 1ece3d5f (Separate env setups)
 
 1. Checkout the repository and initialize all submodules.
+
 ```sh
 git clone https://github.com/openhwgroup/cva6.git
 cd cva6
@@ -94,6 +162,7 @@ git submodule update --init --recursive
 3. Install `cmake`, version 3.14 or higher.
 
 4. Set the RISCV environment variable.
+
 ```sh
 export RISCV=/path/to/toolchain/installation/directory
 ```
@@ -113,19 +182,18 @@ pip3 install -r verif/sim/dv/requirements.txt
 ```
 
 7. Run these commands to install a custom Spike and Verilator (i.e. these versions must be used to simulate the CVA6) and [these](#running-regression-tests-simulations) tests suites.
+
 ```sh
 # DV_SIMULATORS is detailed in the next section
 export DV_SIMULATORS=veri-testharness,spike
 bash verif/regress/smoke-tests.sh
 ```
 
-
 # Tutorials
 
-* **[Running Simulations](tutorials/running_sim.md)**
-* **[ASIC Implementation](tutorials/asic.md)**
-* **[FPGA Implementation and running an OS](tutorials/fpga.md)**
-
+- **[Running Simulations](tutorials/running_sim.md)**
+- **[ASIC Implementation](tutorials/asic.md)**
+- **[FPGA Implementation and running an OS](tutorials/fpga.md)**
 
 # Directory Structure
 
@@ -135,26 +203,25 @@ Files, directories and submodules under `corev_apu` are for the FPGA Emulation p
 The CVA6 core can be compiled stand-alone, and obviously the APU is dependent on the core.
 
 The top-level directories of this repo:
-* **ci**: Scriptware for CI.
-* **common**: Source code used by both the CVA6 Core and the COREV APU. Subdirectories from here are `local` for common files that are hosted in this repo and `submodules` that are hosted in other repos.
-* **core**: Source code for the CVA6 Core only. There should be no sources in this directory used to build anything other than the CVA6 core.
-* **corev_apu**: Source code for the CVA6 APU, exclusive of the CVA6 core. There should be no sources in this directory used to build the CVA6 core.
-* **docs**: Documentation.
-* **pd**: Example and CI scripts to synthesis CVA6.
-* **util**: General utility scriptware.
-* **vendor**: Third-party IP maintained outside the repository.
-* **verif**: Verification environment for the CVA6. The verification files shared with other cores are in the [core-v-verif](https://github.com/openhwgroup/core-v-verif) repository on GitHub. core-v-verif is defined as a cva6 submodule.
 
+- **ci**: Scriptware for CI.
+- **common**: Source code used by both the CVA6 Core and the COREV APU. Subdirectories from here are `local` for common files that are hosted in this repo and `submodules` that are hosted in other repos.
+- **core**: Source code for the CVA6 Core only. There should be no sources in this directory used to build anything other than the CVA6 core.
+- **corev_apu**: Source code for the CVA6 APU, exclusive of the CVA6 core. There should be no sources in this directory used to build the CVA6 core.
+- **docs**: Documentation.
+- **pd**: Example and CI scripts to synthesis CVA6.
+- **util**: General utility scriptware.
+- **vendor**: Third-party IP maintained outside the repository.
+- **verif**: Verification environment for the CVA6. The verification files shared with other cores are in the [core-v-verif](https://github.com/openhwgroup/core-v-verif) repository on GitHub. core-v-verif is defined as a cva6 submodule.
 
 ## verif Directories
 
-- **bsp**:     board support package for test-programs compiled/assembled/linked for the CVA6.
-This BSP is used by both `core` testbench and `uvmt_cva6` UVM verification environment.
+- **bsp**: board support package for test-programs compiled/assembled/linked for the CVA6.
+  This BSP is used by both `core` testbench and `uvmt_cva6` UVM verification environment.
 - **regress**: scripts to install tools, test suites, CVA6 code and to execute tests
-- **sim**:     simulation environment (e.g. riscv-dv)
-- **tb**:      testbench module instancing the core
-- **tests**:   source of test cases and test lists
-
+- **sim**: simulation environment (e.g. riscv-dv)
+- **tb**: testbench module instancing the core
+- **tests**: source of test cases and test lists
 
 # Contributing
 
@@ -166,7 +233,6 @@ Contributions to the documentation (`docs/` and `tutorials/` directories) are ve
 If you find any problems or issues with CVA6 or the documentation, please check out the [issue tracker](https://github.com/openhwgroup/cva6/issues)
 and create a new issue if your problem is not yet tracked. \
 [The CVA6 Kanban Board](https://github.com/orgs/openhwgroup/project/3/view/7) loosely tracks planned improvements.
-
 
 # Publication
 
@@ -195,5 +261,3 @@ If you use CVA6 in your academic work you can cite us:
 # Acknowledgements
 
 Check out the [acknowledgements](ACKNOWLEDGEMENTS.md).
-
-

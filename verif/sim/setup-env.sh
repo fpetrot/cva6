@@ -1,4 +1,4 @@
-# CVA6 project root
+# CVA6 128 project root
 if [ -n "$BASH_VERSION" ]; then
   SCRIPT_PATH="$BASH_SOURCE[0]"
 elif [ -n "$ZSH_VERSION" ]; then

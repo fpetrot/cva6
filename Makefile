@@ -37,13 +37,14 @@ test-location  ?= output/test
 # set to either nothing or -log
 torture-logs   :=
 # custom elf bin to run with sim or sim-verilator
-elf_file        ?= tmp/riscv-tests/build/benchmarks/dhrystone.riscv
+elf_file       ?= tmp/riscv-tests/build/benchmarks/dhrystone.riscv
 # board name for bitstream generation. Currently supported: kc705, genesys2, nexys_video
 BOARD          ?= genesys2
-ALTERA_BOARD		 ?= DK-DEV-AGF014E3ES
-ALTERA_FAMILY	 ?= "AGILEX"
-ALTERA_PART		 ?= AGFB014R24B2E2V
-PLATFORM			 = "PLAT_XILINX"
+ALTERA_BOARD   ?= DK-DEV-AGF014E3ES
+ALTERA_FAMILY  ?= "AGILEX"
+ALTERA_PART    ?= AGFB014R24B2E2V
+PLATFORM        = "PLAT_XILINX"
+
 # root path
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 root-dir := $(dir $(mkfile_path))
@@ -61,7 +62,7 @@ endif
 VL_INC_DIR := $(VERILATOR_INSTALL_DIR)/share/verilator/include
 
 ifndef RISCV
-$(error RISCV not set - please point your RISCV variable to your RISCV installation)
+$(error RISCV not set - RISCV variable mut point to your RISCV installation)
 endif
 
 # Spike tandem mode: default to environment setting (DISABLED if envariable SPIKE_TANDEM is not set).
@@ -827,6 +828,11 @@ dk-run:
 	USER_ID=$(shell id -u) \
 		GROUP_ID=$(shell id -g) \
 		docker compose run --rm cva6-128
+
+# create docker environnement
+env-python:
+	python3 -m venv .venv
+	/work/.venv/bin/pip3 install -r verif/sim/dv/requirements.txt
 
 clean:
 	rm -rf $(riscv-torture-dir)/output/test*

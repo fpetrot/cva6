@@ -24,6 +24,7 @@ LABEL Description="Image to build and run cva6 128 processor"
 ENV ROOTSRCS=/root/src
 ENV INSTPATH=/opt/tools
 ENV BINBUILD=/work/bin
+ENV VERILATOR_TMP=/work/tmp
 
 # Set path environment
 ENV PATH=$INSTPATH/bin:$PATH
@@ -33,7 +34,7 @@ ENV PATH=$BINBUILD:$PATH
 WORKDIR /work
 
 # Create directories
-RUN mkdir -p $INSTPATH $ROOTSRCS
+RUN mkdir -p $INSTPATH $ROOTSRCS $BINBUILD $VERILATOR_TMP
 
 #
 # Dependencies
@@ -43,22 +44,27 @@ RUN apt-get update
 # basic tools
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends --no-install-suggests \
     apt-utils \
-    nano \
-    less \
+    bash-completion \
     file \
     grep \
-    help2man
+    less \
+    help2man \
+    nano \
+    sudo
 
 # network dependencies
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends --no-install-suggests \
     curl \
     wget \
     git \
-    openssh-client
+    openssh-client \
+    openssl
 
 # programming languages
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends --no-install-suggests \
-    python3
+    python3 \
+    python3-pip \
+    python3-venv
 
 # CVA6 dependencies
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends --no-install-suggests \
@@ -72,6 +78,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends --
     flex \
     gawk \
     gperf \
+    libfl-dev \
     libmpc-dev \
     libmpfr-dev \
     libgmp-dev \
@@ -82,3 +89,9 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends --
 # clean the last installs
 RUN apt-get clean
 
+# activate bash-completion
+RUN echo "source /usr/share/bash-completion/bash_completion" >> /.bashrc
+
+# add environment variables to work with the CVA6
+RUN echo "export CVA6_REPO_DIR=/work" >> /.bashrc
+RUN echo "export RISCV=/work/tools/toolchain" >> /.bashrc
