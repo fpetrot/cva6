@@ -44,6 +44,8 @@ install/
 xrun_results/
 /core/include/hwconfig_config_pkg.sv
 __pycache__
+.ropeproject
+.venv
 .bender/
 Bender.lock
 /tools/
