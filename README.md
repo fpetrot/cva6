@@ -79,7 +79,7 @@ can be installed with `make`:
 
 ```bash
 make env-python
-source .venv/bin/activate
+source /.venv/bin/activate
 ```
 
 ## 5. Verilator, Spike installations and stack size
@@ -92,11 +92,11 @@ Before starting, please ensure the following and in this order:
   ```
 - **Verilator installation:** Make sure Verilator is installed correctly. You can install it using:
   ```bash
-  bash ci/install-verilator.sh
+  bash verif/regress/install-verilator.sh
   ```
 - **Spike installation:** You can install it using:
   ```bash
-  bash ci/install-spike.sh
+  bash verif/regress/install-spike.sh
   ```
 
 ## 6. Build the Core
