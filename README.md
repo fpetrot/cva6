@@ -75,7 +75,7 @@ source .venv/bin/activate
 
 ## 5. Verilator, Spike installations and stack size
 
-Before starting, please ensure the following:
+Before starting, please ensure the following and in this order:
 
 - **Stack size limit:** You can increase the limit with:
   ```bash
@@ -95,7 +95,7 @@ Before starting, please ensure the following:
 Run the following command to generate the CVA6 core using Verilator:
 
 ```bash
-make -C /work verilate verilator="verilator --no-timing" target=cv128
+make -C /cva6_128/ verilate verilator="verilator --no-timing" target=cv128
 ```
 
 ## 7. Choose the Program to Run

@@ -17,21 +17,23 @@ LABEL Description="Image to build and run cva6 128 processor"
 #
 # Set environment
 #
+# Working directory
+WORKDIR /cva6_128
+
+#
 # /root/src -> compile stuff
 # /opt/tools -> install non packaged dependencies
-# /work/bin -> built binaries
+# /cva6_128/bin -> built binaries
+# /cva6_128/tmp -> tmp directory for verilator
 #
 ENV ROOTSRCS=/root/src
 ENV INSTPATH=/opt/tools
-ENV BINBUILD=/work/bin
-ENV VERILATOR_TMP=/work/tmp
+ENV BINBUILD=/cva6_128/bin
+ENV VERILATOR_TMP=/cva6_128/tmp
 
 # Set path environment
 ENV PATH=$INSTPATH/bin:$PATH
 ENV PATH=$BINBUILD:$PATH
-
-# Working directory
-WORKDIR /work
 
 # Create directories
 RUN mkdir -p $INSTPATH $ROOTSRCS $BINBUILD $VERILATOR_TMP
@@ -96,5 +98,5 @@ RUN apt-get clean
 RUN echo "source /usr/share/bash-completion/bash_completion" >> /.bashrc
 
 # add environment variables to work with the CVA6
-RUN echo "export CVA6_REPO_DIR=/work" >> /.bashrc
-RUN echo "export RISCV=/work/tools/toolchain" >> /.bashrc
+RUN echo "export CVA6_REPO_DIR=/cva6_128" >> /.bashrc
+RUN echo "export RISCV=/cva6_128/tools/toolchain" >> /.bashrc

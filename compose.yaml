@@ -17,4 +17,4 @@ services:
 
     volumes:
       # Source directory which will contains code and built artifacts on the HOST
-      - .:/work
+      - .:/cva6_128
