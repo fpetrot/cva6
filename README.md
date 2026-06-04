@@ -65,6 +65,15 @@ source verif/sim/simulation-parameters.sh
 NB: `verif/sim/setup-env-toolchain.sh` must come before `verif/sim/setup-env.sh` because
 `setup-env.sh` use paths defined in `verif/sim/setup-env-toolchain.sh`.
 
+Or use the script that do all these commands:
+
+```bash
+source verif/sim/setup-env-all.sh
+```
+
+Those scripts create environment variables needed by the CVA6 such as `RISCV` that indicate where
+the RISC-V toolchain is installed.
+
 CVA6 project use Python to execute multiple tests. We use a specific Python environment to do so and
 can be installed with `make`:
 

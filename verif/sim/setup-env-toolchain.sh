@@ -6,7 +6,7 @@
 #
 # Authors       : Vincent Verdillon
 # Creation Date : June, 2026
-# Description   : Sanitize Makefile
+# Description   : Script to setup toolchain environment variables
 # History       :
 
 # CVA6 128 project root
