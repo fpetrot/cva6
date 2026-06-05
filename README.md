@@ -85,7 +85,7 @@ source /.venv/bin/activate
 
 Before starting, please ensure the following and in this order:
 
-- **Stack size limit:** You can increase the limit with:
+- **Stack size limit:** You must increase the limit with:
   ```bash
   ulimit -s unlimited
   ```
@@ -121,10 +121,17 @@ Replace `/binary/prog/to/run` with the actual path to your ELF binary.
 Run the simulation with the following command:
 
 ```bash
-./work-ver/Variane_testharness $ELF ++$ELF +elf_file=$ELF +debug_disable=1 +core_name=cv128 +tohost_addr=8000f390
+./work-ver/Variane_testharness $ELF ++$ELF +elf_file=$ELF +debug_disable=1 +core_name=cv128 +tohost_addr=80001000
 ```
 
 > ⚠️ **Important:** The `+tohost_addr` value must be set correctly. If it is incorrect, the simulation will not complete properly.
+
+# Troubleshooting
+
+## Segmentation fault (core dumped)
+
+If you have a sgmentation fault when you run the CVA6 128, verify if `ulimit` is setup with
+unlimited.
 
 # CVA6 Original README
 
