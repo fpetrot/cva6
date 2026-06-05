@@ -74,11 +74,10 @@ source verif/sim/setup-env-all.sh
 Those scripts create environment variables needed by the CVA6 such as `RISCV` that indicate where
 the RISC-V toolchain is installed.
 
-CVA6 project use Python to execute multiple tests. We use a specific Python environment to do so and
-can be installed with `make`:
+CVA6 project use Python to execute multiple tests. We use a specific Python environment to do so in
+`/.venv` and you need to activate it:
 
 ```bash
-make env-python
 source /.venv/bin/activate
 ```
 

@@ -54,6 +54,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends --
     help2man \
     nano \
     vim \
+    neovim \
     sudo
 
 # network dependencies
@@ -94,9 +95,20 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends --
 # clean the last installs
 RUN apt-get clean
 
-# activate bash-completion
+# activate bash-completion and alias
 RUN echo "source /usr/share/bash-completion/bash_completion" >> /.bashrc
+RUN echo "alias nvim=neovim" >> /.bashrc
 
 # add environment variables to work with the CVA6
 RUN echo "export CVA6_REPO_DIR=/cva6_128" >> /.bashrc
 RUN echo "export RISCV=/cva6_128/tools/toolchain" >> /.bashrc
+
+# create the python environment
+WORKDIR /tmp
+RUN git clone https://github.com/fpetrot/cva6.git
+WORKDIR /tmp/cva6
+RUN git submodule update --init --recursive
+RUN python3 -m venv /.venv
+RUN /.venv/bin/pip3 install -r verif/sim/dv/requirements.txt
+RUN rm -rf /tmp/cva6
+WORKDIR /cva6_128

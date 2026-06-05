@@ -829,11 +829,6 @@ dk-run:
 		GROUP_ID=$(shell id -g) \
 		docker compose run --rm cva6-128
 
-# create docker environnement
-env-python:
-	python3 -m venv ../.venv
-	../.venv/bin/pip3 install -r verif/sim/dv/requirements.txt
-
 clean:
 	rm -rf $(riscv-torture-dir)/output/test*
 	rm -rf $(library)/ $(dpi-library)/ $(ver-library)/ $(vcs-library)/
