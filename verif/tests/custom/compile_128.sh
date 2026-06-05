@@ -57,6 +57,8 @@ current_date=$(date +%Y-%m-%d)
 output_dir="/cva6_128/verif/sim/out_${current_date}/directed_tests/"
 mkdir -p "$output_dir"
 
+echo "Compile to ELF..."
+
 set -x
 
 # Compile program the programme
@@ -69,3 +71,25 @@ $RISCV/bin/riscv128-unknown-elf-gcc "$src0" \
     "${carch[@]}"
 
 set +x
+
+echo "Convert ELF to BIN to be used by the RTL simulation..."
+
+set -x
+
+$RISCV_OBJCOPY -O binary $output_dir$name $output_dir$name.bin
+
+set +x
+
+# Works but do not uses binary, uses ELF, nobody can read ELF 128 bits
+# need to convert ELF to BIN with cva6.py option
+        # --steps=gen,gcc_compile,iss_sim,iss_cmp \
+python3 cva6.py \
+        --target cv128 \
+        --hwconfig_opts="$DV_HWCONFIG_OPTS" \
+        --iss="$DV_SIMULATORS" \
+        --iss_yaml=cva6.yaml \
+        --steps=gen,gcc_compile,iss_sim \
+        --c_tests "$src0" \
+        --sv_seed 1 \
+        --gcc_opts "${srcA[*]} ${cflags[*]}" \
+        $DV_OPTS

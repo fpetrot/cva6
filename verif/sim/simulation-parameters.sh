@@ -10,5 +10,8 @@
 # History       :
 
 # Simulation parameters
-export DV_SIMULATORS=veri-testharness,spike
-export TRACE_FAST=1
+# export DV_SIMULATORS=veri-testharness,spike
+export DV_SIMULATORS=veri-testharness
+
+# Waveform parameter
+# export TRACE_FAST=1
