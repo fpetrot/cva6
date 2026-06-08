@@ -53,7 +53,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends --
     less \
     help2man \
     nano \
-    neovim
+    vim
 
 # network dependencies
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends --no-install-suggests \
@@ -68,6 +68,16 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends --
     python3 \
     python3-pip \
     python3-venv
+
+# create the python environment
+WORKDIR /tmp
+RUN git clone https://github.com/fpetrot/cva6.git
+WORKDIR /tmp/cva6
+RUN git submodule update --init --recursive
+RUN python3 -m venv /.venv
+RUN /.venv/bin/pip3 install -r verif/sim/dv/requirements.txt
+RUN rm -rf /tmp/cva6
+WORKDIR /cva6_128
 
 # CVA6 dependencies
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends --no-install-suggests \
@@ -88,6 +98,9 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends --
     libgmp-dev \
     libtool \
     libdebuginfod1 \
+    libcapstone-dev \
+    libpixman-1-dev \
+    libglib2.0-0 \
     texinfo \
     zlib1g-dev
 
@@ -96,22 +109,15 @@ RUN apt-get clean
 
 # activate bash-completion and alias
 RUN echo "source /usr/share/bash-completion/bash_completion" >> /.bashrc
-RUN echo "alias nvim=neovim" >> /.bashrc
-RUN echo "alias vim=neovim" >> /.bashrc
+RUN echo "alias nvim=vim" >> /.bashrc
 
 # add environment variables to work with the CVA6
 RUN echo "export CVA6_REPO_DIR=/cva6_128" >> /.bashrc
 RUN echo "export RISCV=/cva6_128/tools/toolchain" >> /.bashrc
 
-# create the python environment
-WORKDIR /tmp
-RUN git clone https://github.com/fpetrot/cva6.git
-WORKDIR /tmp/cva6
-RUN git submodule update --init --recursive
-RUN python3 -m venv /.venv
-RUN /.venv/bin/pip3 install -r verif/sim/dv/requirements.txt
-RUN rm -rf /tmp/cva6
-WORKDIR /cva6_128
+# config gdb
+RUN mkdir -p /.config/gdb
+RUN echo "set auto-load safe-path /" >> /.config/gdb/gdbinit
 
 # increase the size of the stack
 RUN ulimit -s unlimited

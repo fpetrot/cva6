@@ -126,6 +126,47 @@ Run the simulation with the following command:
 
 > ⚠️ **Important:** The `+tohost_addr` value must be set correctly. If it is incorrect, the simulation will not complete properly.
 
+# Debug
+
+## GDB
+
+We assume that you have QEMU and GDB installed with your 128 bits toolchain.
+In this case there are a bash script to launch a program with GDB and a `.gdbinit` at the project
+root:
+
+```bash
+bash gdb.sh <you_program>
+```
+
+NB. Because in most test programm there is no obvious entry point you can begin to display and
+execute the assembly code with:
+
+```bash
+display /i $pc
+```
+
+And go to the next instruction with:
+
+```bash
+si
+```
+
+## Error code
+
+When you run a program on the CV6 there is a system to return error code or other message to the host.
+This system works with a global variable named `tohost`, this variable is read by Verilator to check
+if there is a problem. The memory address is specified by the `tohost_addr` parameter of
+`Variane_testharness` program that we can see in the section 8 of the Quick Start.
+
+The RTL simulator read continuously the `tohsot` variable and interpret it like this:
+
+- The Less Significant Bit (LSB) indicate to the RTL simulator to stop or continue. (0 => continue, 1 =>
+  stop).
+- Other bit than the LSB are read by the RTL simulator or other program. If the RTL simulator stop
+  these bites indicate if the CPU encounter an error. So if you write 1 in `tohost` that while stop
+  the simulator BUT because other bits are at zero Verilator while not see any error and say that
+  all are all right.
+
 # Troubleshooting
 
 ## Segmentation fault (core dumped)
