@@ -51,6 +51,12 @@ Launch the docker container with `make` :
 make dk-run
 ```
 
+Normally all environment variables and python environment are sourced by the `/.bashrc` by default.
+So you can skip the section 4.1 if all work correctly.
+However, section 4.1 describes how to setup python environment and environment variables.
+
+## 4.1 Setup environment variables and python environment
+
 By default, `RISCV` and `CVA6_REPO_DIR` variables are defined in the `/.bashrc`.
 Those variables are very important because they defined where the toolchain is installed and where is the project root respectively.
 
@@ -106,25 +112,43 @@ Run the following command to generate the CVA6 core using Verilator:
 make -C /cva6_128/ verilate verilator="verilator --no-timing" target=cv128
 ```
 
-## 7. Choose the Program to Run
+## 7. Run a program on the CVA6 128 bits
 
-Set the `ELF` environment variable to the path of the binary you want to run:
+Because we use a 128 bits version of the CVA6 the original compilation pipeline does not work by
+default. So we must for now use our proper compilation tools.
+To run a program on the CVA6 128 bits you can use this script:
 
 ```bash
-export ELF=/binary/prog/to/run
+bash verif/tests/custom/run_cva_128.sh /absolute/path/to/you/code
 ```
 
-Replace `/binary/prog/to/run` with the actual path to your ELF binary.
+This script compiles and use the `cva6.py` python script to run your program.
+If you want to manually run your program you can read section 7.1.
 
-## 8. Launch the Simulation
+## 7.1 Run a program
+
+Because the ELF file format does not support 128 bits program (for now) we have to convert and load
+manually the ELF file into binary raw data.
+
+To do so manually you have to compile your program into a `ELF` file and convert it into binary with
+`objcopy` and set the `ELF_BIN_DATA` environment variable with the path to this file.
+
+```bash
+export ELF_BIN_DATA=/binary/prog/to/run
+```
+
+## 7.1.1 Launch the Simulation
+
+To be able to receive message/error from your program you must specify correctly the `tohost`
+address. It can be determined by using `nm`.
 
 Run the simulation with the following command:
 
 ```bash
-./work-ver/Variane_testharness $ELF ++$ELF +elf_file=$ELF +debug_disable=1 +core_name=cv128 +tohost_addr=80001000
+./work-ver/Variane_testharness $ELF_BIN_DATA ++$ELF_BIN_DATA +elf_file=$ELF_BIN_DATA +debug_disable=1 +core_name=cv128 +tohost_addr=<your_tohost>
 ```
 
-> ⚠️ **Important:** The `+tohost_addr` value must be set correctly. If it is incorrect, the simulation will not complete properly.
+> ⚠️ **Important:** The `+tohost_addr` value must be set correctly. If it is incorrect, the simulation will not complete properly. In a matter of fact, the CPU simulator will not stop in case of infinite loop.
 
 # Debug
 
@@ -198,11 +222,11 @@ Throughout all build and simulations scripts executions, you can use the environ
 - if left undefined, `NUM_JOBS` will default to 1, resulting in a sequential execution
   of `make` jobs;
 - when setting `NUM_JOBS` to an explicit value, it is recommended not to exceed 2/3 of
-<<<<<<< HEAD
-the total number of virtual cores available on your system.
-=======
+  <<<<<<< HEAD
   the total number of virtual cores available on your system.
->>>>>>> 1ece3d5f (Separate env setups)
+  =======
+  the total number of virtual cores available on your system.
+  > > > > > > > 1ece3d5f (Separate env setups)
 
 1. Checkout the repository and initialize all submodules.
 

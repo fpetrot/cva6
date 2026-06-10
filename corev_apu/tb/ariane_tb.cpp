@@ -285,7 +285,8 @@ done_processing:
 
   std::unique_ptr<Variane_testharness> top(new Variane_testharness);
 
-  //read_elf(htif_argv[1]);
+  // We while not use the current ELF reader because it does not support bits program.
+  // read_elf(htif_argv[1]);
 
 #if VM_TRACE
   Verilated::traceEverOn(true); // Verilator must compute traced signals
@@ -340,25 +341,45 @@ done_processing:
 #define MEM top->ariane_testharness__DOT__i_sram__DOT__gen_cut__BRA__0__KET____DOT__i_tc_sram_wrapper__DOT__i_tc_sram__DOT__sram
 #define MEM_USER top->ariane_testharness__DOT__i_sram__DOT__gen_cut__BRA__0__KET____DOT__gen_mem_user__DOT__i_tc_sram_wrapper_user__DOT__i_tc_sram__DOT__sram
 #endif
+
+  // This code preload directly in memory the ELF file we want to run to avoid
+  // using the current ELF reader that does not support 128 bits programs.
+#define ELF_BIN_DATA getenv("ELF_BIN_DATA")
+
   long long addr;
   long long len;
 
-#define ELF getenv("ELF")
+  printf("Raw ELF binary data: %s \n", ELF_BIN_DATA);
 
-  printf("%s \n", ELF);
-      
-  std::ifstream file(ELF, std::ios::binary | std::ios::ate);
-  std::streamsize size = file.tellg();
-  file.seekg(0, std::ios::beg);
-
-  std::vector<char> buffer(size);
-  if (file.read(buffer.data(), size))
-  {
-      /* worked! */
+  // test if the argument is well defined
+  if (ELF_BIN_DATA == NULL) {
+    std::cerr << "Please set the ELF_BIN_DATA environment variable to the binary file path you want to run.\n";
+    return 1;
   }
-  for(int i = 0; i < buffer.size(); i++){
-    char *ptr = ((char*)(void *)MEM) + i; //0x80000000;
-    *ptr = buffer[i];
+
+  std::ifstream file(ELF_BIN_DATA, std::ios::binary | std::ios::ate);
+  std::streamsize size = file.tellg();
+
+  // Check if the file size is valid and not larger than the memory size
+  if (size <= 0 || size > 0x010000) {
+    std::cerr << "Invalid ELF file size: " << size << " bytes. Must be between 1 and 65536 bytes.\n";
+    return 1;
+  }
+
+  file.seekg(0, std::ios::beg);
+  std::vector<char> buffer(size);
+
+  // Read the file into the buffer and check if it was successful
+  if (!file.read(buffer.data(), size))
+  {
+      std::cerr << "Failed to read the binary file: " << ELF_BIN_DATA << "\n";
+      return 1;
+  }
+
+  // load the ELF file in memory
+  char *ptr = (char*)(void *)MEM; //0x80000000;
+  if (!buffer.empty()) {
+    std::memcpy(ptr, buffer.data(), buffer.size());
   }
 
   /*size_t mem_size = 0x010000;
@@ -367,7 +388,7 @@ done_processing:
     if (addr == 0x80000000) {
       read_section_void(addr, (void *) MEM , mem_size);
     }
-      
+
     if (addr == 0x84000000)
         try {
           read_section_void(addr, (void *) MEM_USER , mem_size);

@@ -36,7 +36,7 @@ cflags=(
     -nostdlib
     -nostartfiles
     -lgcc
-    -O3 --no-inline
+    -O0 --no-inline
     -Wno-implicit-function-declaration
     -Wno-implicit-int
     -I /cva6_128/verif/tests/custom/env/
@@ -59,7 +59,7 @@ mkdir -p "$output_dir"
 
 echo "Compile to ELF..."
 
-set -x
+# set -x
 
 # Compile program the programme
 $RISCV/bin/riscv128-unknown-elf-gcc "$src0" \
@@ -70,15 +70,22 @@ $RISCV/bin/riscv128-unknown-elf-gcc "$src0" \
     -o $output_dir$name \
     "${carch[@]}"
 
-set +x
+# set +x
 
 echo "Convert ELF to BIN to be used by the RTL simulation..."
 
-set -x
+# set -x
 
+# extract the binary data fro mthe elf file
 $RISCV_OBJCOPY -O binary $output_dir$name $output_dir$name.bin
 
-set +x
+# set +x
+
+export ELF_BIN_DATA=$output_dir$name.bin
+
+# get the thost addr to discuss with the host and cut it to avoid 128 bits addr
+tohost_addr=$($RISCV/bin/${CV_SW_PREFIX}nm -B $output_dir$name | grep -w tohost | cut -d' ' -f1 | cut -c17-32)
+echo "tohost address: $tohost_addr"
 
 # Works but do not uses binary, uses ELF, nobody can read ELF 128 bits
 # need to convert ELF to BIN with cva6.py option
@@ -93,3 +100,12 @@ python3 cva6.py \
         --sv_seed 1 \
         --gcc_opts "${srcA[*]} ${cflags[*]}" \
         $DV_OPTS
+
+# run verilator
+# $ROOT_PROJECT/work-ver/Variane_testharness $ELF_BIN_DATA \
+#                                            ++$ELF_BIN_DATA \
+#                                            +elf_file=$ELF_BIN_DATA \
+#                                            +debug_disable=1 \
+#                                            +core_name=cv128 \
+#                                            +tohost_addr=$tohost_addr
+

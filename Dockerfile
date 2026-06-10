@@ -77,6 +77,7 @@ RUN git submodule update --init --recursive
 RUN python3 -m venv /.venv
 RUN /.venv/bin/pip3 install -r verif/sim/dv/requirements.txt
 RUN rm -rf /tmp/cva6
+RUN echo "source /.venv/bin/activate" >> /.bashrc
 WORKDIR /cva6_128
 
 # CVA6 dependencies
@@ -91,6 +92,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends --
     device-tree-compiler \
     flex \
     gawk \
+    gdb \
     gperf \
     libfl-dev \
     libmpc-dev \
@@ -114,6 +116,7 @@ RUN echo "alias nvim=vim" >> /.bashrc
 # add environment variables to work with the CVA6
 RUN echo "export CVA6_REPO_DIR=/cva6_128" >> /.bashrc
 RUN echo "export RISCV=/cva6_128/tools/toolchain" >> /.bashrc
+RUN echo "source /cva6_128/verif/sim/setup-env-all.sh" >> /.bashrc
 
 # config gdb
 RUN mkdir -p /.config/gdb
@@ -121,3 +124,4 @@ RUN echo "set auto-load safe-path /" >> /.config/gdb/gdbinit
 
 # increase the size of the stack
 RUN ulimit -s unlimited
+
