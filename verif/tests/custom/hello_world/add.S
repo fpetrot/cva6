@@ -6,6 +6,7 @@
 # You may obtain a copy of the License at https://solderpad.org/licenses/
 #
 # Original Author: Guillaume Chauvon (guillaume.chauvon@thalesgroup.fr)
+# Contributor : Vincent Verdillon
 
 #*****************************************************************************
 # add.S
@@ -18,5 +19,5 @@ main:
   li t0, 0x0
   li t1, 0x0
   add a0, t0, t1
-  j _exit
 
+  j _exit

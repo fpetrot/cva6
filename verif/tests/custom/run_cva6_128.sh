@@ -26,7 +26,7 @@ cd verif/sim
 
 srcA=(
     # /cva6_128/verif/tests/custom/common/syscalls.c
-    /cva6_128/verif/tests/custom/common/crt.S
+    /cva6_128/verif/tests/custom/common/crt0.S
 )
 cflags=(
     -fno-tree-loop-distribute-patterns

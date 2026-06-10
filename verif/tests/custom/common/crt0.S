@@ -2,7 +2,11 @@
 
 #include "encoding.h"
 
-#if __riscv_xlen == 64
+#if __riscv_xlen == 128
+# define LREG lq
+# define SREG sq
+# define REGBYTES 16
+#elif __riscv_xlen == 64
 # define LREG ld
 # define SREG sd
 # define REGBYTES 8
@@ -15,6 +19,7 @@
   .section ".text.init"
   .globl _start
 _start:
+  # reset all registers
   li  x1, 0
   li  x2, 0
   li  x3, 0
@@ -52,15 +57,22 @@ _start:
   csrs mstatus, t0
 
   # make sure XLEN agrees with compilation choice
+  # test if we run the XLEN on the good CPU arch
   li t0, 1
+#if __riscv_xlen == 32
   slli t0, t0, 31
-#if __riscv_xlen == 64
-  bgez t0, 1f
+  bltz t0, 1f
+#elif __riscv_xlen == 64
+  slli t0, t0, 63
+  bltz t8, 1f
 #else
+  # 128 bits case
+  slli t0, t0, 127
   bltz t0, 1f
 #endif
 2:
-  li a0, 1
+  # return an error to host
+  li a0, 3
   sw a0, tohost, t0
   j 2b
 1:
@@ -117,7 +129,7 @@ _start:
 .option pop
 
   la  tp, _end + 63
-  and tp, tp, -64
+  andi tp, tp, -64
 
   # get core id
   csrr a0, mhartid
@@ -127,10 +139,10 @@ _start:
 
   # give each core 128KB of stack + TLS
 #define STKSHIFT 17
-  add sp, a0, 1
-  sll sp, sp, STKSHIFT
+  addi sp, a0, 1
+  slli sp, sp, STKSHIFT
   add sp, sp, tp
-  sll a2, a0, STKSHIFT
+  slli a2, a0, STKSHIFT
   add tp, tp, a2
 
   j _init
@@ -138,7 +150,8 @@ _start:
 
   .align 2
 trap_entry:
-  addi sp, sp, -272
+  # gives enough space to save all pointers
+  addi sp, sp, -(32+2)*REGBYTES
 
   SREG x1, 1*REGBYTES(sp)
   SREG x2, 2*REGBYTES(sp)
@@ -214,15 +227,15 @@ trap_entry:
   LREG x30, 30*REGBYTES(sp)
   LREG x31, 31*REGBYTES(sp)
 
-  addi sp, sp, 272
+  addi sp, sp, (32+2)*REGBYTES
   mret
 
   // Default definition of handle_trap: Exit with code 0x7ffffff0.
   .weak   handle_trap
-  .type	handle_trap, @function
+  .type   handle_trap, @function
 handle_trap:
-        li  a0, -32
-	j   _exit
+  li  a0, -32
+  j   _exit
   .size handle_trap, . - handle_trap
 
   // Default, overrideable definition of _init:
@@ -245,14 +258,15 @@ exit:
   // Minimal low-level exit function.
   .global  _exit
 _exit:
-  sll  a0, a0, 1      # Set up exit code: shift a0 left by 1
-  add  a0, a0, 1      # and set bit 0.
+  slli  a0, a0, 1     # Set up exit code: shift a0 left by 1
+  addi  a0, a0, 1     # and set bit 0.
   sw   a0, tohost, t5 # Store bits [31:0] of a0 into variable tohost
   nop                 # Leave one cycle of slack before entering endless loop
 1:
   j        1b;        # Wait indefinitely (until the env terminates the simulation)
   .size    _exit, . - _exit
 
+# Alignment is 2**7 == 128 bytes
 .section ".tohost","aw",@progbits
 .align 6
 .globl tohost
@@ -262,7 +276,6 @@ tohost: .dword 0
 fromhost: .dword 0
 
 .section ".uvmif","aw",@progbits
-# Alignment is 2**6 == 64 bytes
 .align 6
 .globl int_ack
 int_ack: .dword 0
