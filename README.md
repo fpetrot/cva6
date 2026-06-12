@@ -152,6 +152,17 @@ Run the simulation with the following command:
 
 # Debug
 
+## Logs
+
+When you run a simulation Verilator generate an execution trace with executed opcode.
+Normally on rv64 architecture Spike translate these opcodes into assembly. However, there is no rv128
+instructions support in Spike so rv128 instructions are poorly translated (without arguments). So
+there are an additional translation layer for rv128 that use `objdump` to get the disassembly. The `rv128.spike.log` and `rv128.objdump.log`
+are logs that pas through the additional translation layer:
+
+- `rv128.spike.log` -> Spike translation with a translation pass on rv128 instructions
+- `rv128.objdump.log` -> objdump only translation,
+
 ## GDB
 
 We assume that you have QEMU and GDB installed with your 128 bits toolchain.
