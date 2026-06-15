@@ -74,15 +74,6 @@ $RISCV/bin/riscv128-unknown-elf-gcc "$src0" \
 
 echo "Convert ELF to BIN to be used by the RTL simulation..."
 
-# set -x
-
-# extract the binary data fro mthe elf file
-$RISCV_OBJCOPY -O binary $output_dir$name $output_dir$name.bin
-
-# set +x
-
-export ELF_BIN_DATA=$output_dir$name.bin
-
 # get the thost addr to discuss with the host and cut it to avoid 128 bits addr
 tohost_addr=$($RISCV/bin/${CV_SW_PREFIX}nm -B $output_dir$name | grep -w tohost | cut -d' ' -f1 | cut -c17-32)
 echo "tohost address: $tohost_addr"

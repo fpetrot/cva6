@@ -349,15 +349,31 @@ done_processing:
   long long addr;
   long long len;
 
-  printf("Raw ELF binary data: %s \n", ELF_BIN_DATA);
-
-  // test if the argument is well defined
-  if (ELF_BIN_DATA == NULL) {
-    std::cerr << "Please set the ELF_BIN_DATA environment variable to the binary file path you want to run.\n";
+  // convert the ELF file to a binary file using objcopy
+  std::string command = "riscv128-unknown-elf-objcopy -O binary ";
+  command += htif_argv[1];
+  command += " ";
+  command += htif_argv[1] + std::string(".bin");
+  int ret_code = system(command.c_str());
+  if (ret_code != 0) {
+    std::cerr << "Failed to convert ELF to binary using objcopy. Command: "
+              << command << "\n";
     return 1;
   }
 
-  std::ifstream file(ELF_BIN_DATA, std::ios::binary | std::ios::ate);
+  // Construct the path to the binary file
+  std::string binary_file_path = htif_argv[1] + std::string(".bin");
+
+  printf("Raw ELF binary data: %s \n", binary_file_path.c_str());
+
+  // test if the argument is well defined
+  if (binary_file_path.empty()) {
+    std::cerr << "No binary file specified for emulator\n";
+    usage(argv[0]);
+    return 1;
+  }
+
+  std::ifstream file(binary_file_path, std::ios::binary | std::ios::ate);
   std::streamsize size = file.tellg();
 
   // Check if the file size is valid and not larger than the memory size
@@ -372,7 +388,7 @@ done_processing:
   // Read the file into the buffer and check if it was successful
   if (!file.read(buffer.data(), size))
   {
-      std::cerr << "Failed to read the binary file: " << ELF_BIN_DATA << "\n";
+      std::cerr << "Failed to read the binary file: " << binary_file_path << "\n";
       return 1;
   }
 

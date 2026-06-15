@@ -128,16 +128,8 @@ If you want to manually run your program you can read section 7.1.
 ## 7.1 Run a program
 
 Because the ELF file format does not support 128 bits program (for now) we have to convert and load
-manually the ELF file into binary raw data.
-
-To do so manually you have to compile your program into a `ELF` file and convert it into binary with
-`objcopy` and set the `ELF_BIN_DATA` environment variable with the path to this file.
-
-```bash
-export ELF_BIN_DATA=/binary/prog/to/run
-```
-
-## 7.1.1 Launch the Simulation
+manually the ELF file into binary raw data. Verilator do it itself and creates a binary file using
+objcopy in the same directory of ELF.
 
 To be able to receive message/error from your program you must specify correctly the `tohost`
 address. It can be determined by using `nm`.
@@ -145,6 +137,7 @@ address. It can be determined by using `nm`.
 Run the simulation with the following command:
 
 ```bash
+export ELF_BIN_DATA="path/to/the/program"
 ./work-ver/Variane_testharness $ELF_BIN_DATA ++$ELF_BIN_DATA +elf_file=$ELF_BIN_DATA +debug_disable=1 +core_name=cv128 +tohost_addr=<your_tohost>
 ```
 
