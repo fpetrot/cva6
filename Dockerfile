@@ -124,4 +124,4 @@ RUN echo "set auto-load safe-path /" >> /.config/gdb/gdbinit
 
 # increase the size of the stack
 RUN ulimit -s unlimited
-
+RUN echo "ulimit -s unlimited" >> /.bashrc
