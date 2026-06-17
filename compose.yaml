@@ -1,0 +1,20 @@
+# Copyright 2026 Univ. Grenoble Alpes, Inria, TIMA Laboratory
+#
+# SPDX-License-Identifier: Apaches-2.0 WITH SHL-2.1
+#
+# Authors       : Vincent Verdillon
+# Creation Date : June, 2026
+# Description   : Compose file for CVA6 128 bits docker environment
+# History       :
+
+services:
+  cva6-128:
+    build: .
+    user: "${USER_ID}:${GROUP_ID}"
+
+    environment:
+      USER: "${USER}"
+
+    volumes:
+      # Source directory which will contains code and built artifacts on the HOST
+      - .:/cva6_128
