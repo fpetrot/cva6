@@ -437,7 +437,22 @@ veri-testharness:
 	[ ! -f verilator.fst ] || mv verilator.fst `dirname $(log)`/`basename $(log) .log`.fst
 	[ ! -f verilator.vcd ] || mv verilator.vcd `dirname $(log)`/`basename $(log) .log`.vcd
 	# Generate disassembled log.
-	$(tool_path)/spike-dasm --isa=$(variant) < ./trace_rvfi_hart_00.dasm > $(log)
+	# This step is currently modified because spike does not support 128 bits instructions
+	# Spike is capable of translate 128 bits instructions but partialy.
+	# spike.log   -> Spike + objdump translation
+	# objdump.log -> objdump translation
+	@echo "$(variant)" | grep -q "rv128"; \
+	if [ $$? -eq 0 ]; then \
+		echo "Running RV128 trace translation"; \
+		cp ./trace_rvfi_hart_00.dasm $(log).dasm; \
+		$(tool_path)/spike-dasm --isa=rv64ic < ./trace_rvfi_hart_00.dasm > $(log); \
+		python3 ../tests/custom/trace_translate_rv128.py --elf $(elf) --trace $(log) > $(log).rv128.spike.log; \
+		python3 ../tests/custom/trace_translate_rv128.py --elf $(elf) --trace $(log).dasm > $(log).rv128.objdump.log; \
+	else \
+		echo "Running RV32/RV64 trace translation"; \
+		$(tool_path)/spike-dasm --isa=$(variant) < ./trace_rvfi_hart_00.dasm > $(log); \
+	fi
+
 	grep $(isspostrun_opts) ./trace_rvfi_hart_00.dasm
 
 xrun-testharness:
