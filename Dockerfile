@@ -104,6 +104,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends --
     libpixman-1-dev \
     libglib2.0-0 \
     texinfo \
+    qemu-system-riscv64 \
     zlib1g-dev
 
 # clean the last installs
