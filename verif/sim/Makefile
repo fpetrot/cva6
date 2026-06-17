@@ -408,8 +408,10 @@ vcs-testharness:
 	[ ! -f novas.fsdb ] || \
 	  mv novas.fsdb `dirname $(log)`/`basename $(log) .log`.fsdb
 	# Generate disassembled log.
-	$(tool_path)/spike-dasm --isa=$(variant) < ./trace_rvfi_hart_00.dasm > $(log)
-	grep $(isspostrun_opts) ./trace_rvfi_hart_00.dasm
+	TRACE_RVFI_DASM=$$(ls ./trace_rvfi_hart_00.dasm ./trace_rvfi_hart_0.dasm 2>/dev/null | head -n 1); \
+	test -n "$$TRACE_RVFI_DASM"; \
+	$(tool_path)/spike-dasm --isa=$(variant) < "$$TRACE_RVFI_DASM" > $(log); \
+	grep $(isspostrun_opts) "$$TRACE_RVFI_DASM"
 
 veri-testharness:
 	make -C $(path_var) verilate verilator="verilator --no-timing" target=$(target) defines=$(subst +define+,,$(isscomp_opts))
@@ -420,8 +422,10 @@ veri-testharness:
 	[ ! -f verilator.fst ] || mv verilator.fst `dirname $(log)`/`basename $(log) .log`.fst
 	[ ! -f verilator.vcd ] || mv verilator.vcd `dirname $(log)`/`basename $(log) .log`.vcd
 	# Generate disassembled log.
-	$(tool_path)/spike-dasm --isa=$(variant) < ./trace_rvfi_hart_00.dasm > $(log)
-	grep $(isspostrun_opts) ./trace_rvfi_hart_00.dasm
+	TRACE_RVFI_DASM=$$(ls ./trace_rvfi_hart_00.dasm ./trace_rvfi_hart_0.dasm 2>/dev/null | head -n 1); \
+	test -n "$$TRACE_RVFI_DASM"; \
+	$(tool_path)/spike-dasm --isa=$(variant) < "$$TRACE_RVFI_DASM" > $(log); \
+	grep $(isspostrun_opts) "$$TRACE_RVFI_DASM"
 
 xrun-testharness:
 	@echo "[XRUN-TESTHARNESS] Running"
