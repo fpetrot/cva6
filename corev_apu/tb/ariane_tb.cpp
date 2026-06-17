@@ -18,6 +18,7 @@
 #include "verilator.h"
 #include "verilated.h"
 #include "Variane_testharness.h"
+#include <sys/types.h>
 #if (VERILATOR_VERSION_INTEGER >= 5000000)
   // Verilator v5 adds $root wrapper that provides rootp pointer.
   #include "Variane_testharness___024root.h"
@@ -38,6 +39,7 @@
 #include <ctime>
 #include <signal.h>
 #include <unistd.h>
+#include <fstream>
 
 #include <fesvr/dtm.h>
 #include <fesvr/htif_hexwriter.h>
@@ -284,7 +286,7 @@ done_processing:
 
   std::unique_ptr<Variane_testharness> top(new Variane_testharness);
 
-  read_elf(htif_argv[1]);
+  // read_elf(htif_argv[1]);
 
 #if VM_TRACE
   Verilated::traceEverOn(true); // Verilator must compute traced signals
@@ -339,20 +341,112 @@ done_processing:
 #define MEM top->ariane_testharness__DOT__i_sram__DOT__gen_cut__BRA__0__KET____DOT__i_tc_sram_wrapper__DOT__i_tc_sram__DOT__sram
 #define MEM_USER top->ariane_testharness__DOT__i_sram__DOT__gen_cut__BRA__0__KET____DOT__gen_mem_user__DOT__i_tc_sram_wrapper_user__DOT__i_tc_sram__DOT__sram
 #endif
+
+#define RISCV_OBJCOPY getenv("RISCV_OBJCOPY")
+
   long long addr;
   long long len;
 
-  size_t mem_size = 0xFFFFFF;
-  while(get_section(&addr, &len))
-  {
-    if (addr == 0x80000000)
-        read_section_void(addr, (void *) MEM , mem_size);
-    if (addr == 0x84000000)
-        try {
-          read_section_void(addr, (void *) MEM_USER , mem_size);
-        } catch (...){
-          std::cerr << "No user memory instantiated ...\n";
-        }
+  std::string objcopy = RISCV_OBJCOPY;
+  if (objcopy.empty()) {
+    std::cerr << "RISCV_OBJCOPY environment variable is not set. Please set it to the path of the riscv64-unknown-elf-objcopy binary.\n";
+    return 1;
+  }
+
+  // determine if the ELF is 32/64 bits or 128 bits
+  FILE* fd_elf = fopen(htif_argv[1], "rb");
+  if (!fd_elf) {
+      std::cerr << "Unable to open the ELF file.\n";
+      return 1;
+  }
+
+  uint8_t header_elf[5];
+  if (fread(header_elf, 1, sizeof(header_elf), fd_elf) != sizeof(header_elf)) {
+    fclose(fd_elf);
+    std::cerr << "File too small to be a valid ELF\n";
+  }
+  fclose(fd_elf);
+
+  if (header_elf[0] != 0x7F || header_elf[1] != 'E' || header_elf[2] != 'L'  || header_elf[3] != 'F') {
+    std::cerr << "Not a valid ELF file.\n";
+  }
+
+  bool is_arch_32_64 = false;
+  switch (header_elf[4]) {
+    case 1:
+    case 2: is_arch_32_64 = true; 
+            break;
+    default: is_arch_32_64 = false;
+  }
+
+  if (is_arch_32_64) {
+    std::cerr << "ELF architecture is recognized as 32-bit or 64-bit\n";
+
+    read_elf(htif_argv[1]);
+
+    size_t mem_size = 0xFFFFFF;
+    while(get_section(&addr, &len))
+    {
+      if (addr == 0x80000000)
+          read_section_void(addr, (void *) MEM , mem_size);
+      if (addr == 0x84000000)
+          try {
+            read_section_void(addr, (void *) MEM_USER , mem_size);
+          } catch (...){
+            std::cerr << "No user memory instantiated ...\n";
+          }
+    }
+  } else {
+
+    std::cerr << "ELF architecture is not recognized as 32-bit or 64-bit, using binary format.\n";
+
+    std::string command_objcopy = objcopy + " -O binary ";
+    command_objcopy += htif_argv[1];
+    command_objcopy += " ";
+    command_objcopy += htif_argv[1] + std::string(".bin");
+    int ret_code_objcopy = system(command_objcopy.c_str());
+    if (ret_code_objcopy != 0) {
+      std::cerr << "Failed to convert ELF to binary using objcopy. Command: "
+                << command_objcopy << "\n";
+      return 1;
+    }
+
+    // Construct the path to the binary file
+    std::string binary_file_path = htif_argv[1] + std::string(".bin");
+
+    std::cerr << "Raw ELF binary data: " << binary_file_path.c_str() << "\n";
+
+    // test if the argument is well defined
+    if (binary_file_path.empty()) {
+      std::cerr << "No binary file specified for emulator\n";
+      usage(argv[0]);
+      return 1;
+    }
+
+    std::ifstream file(binary_file_path, std::ios::binary | std::ios::ate);
+    std::streamsize size = file.tellg();
+
+    // Check if the file size is valid
+    if (size <= 0) {
+      std::cerr << "Invalid ELF file size: " << size << " \n";
+      return 1;
+    }
+
+    file.seekg(0, std::ios::beg);
+    std::vector<char> buffer(size);
+
+    // Read the file into the buffer and check if it was successful
+    if (!file.read(buffer.data(), size))
+    {
+        std::cerr << "Failed to read the binary file: " << binary_file_path << "\n";
+        return 1;
+    }
+
+    // load the ELF file in memory
+    char *ptr = (char*)(void *)MEM; //0x80000000;
+    if (!buffer.empty()) {
+      std::memcpy(ptr, buffer.data(), buffer.size());
+    }
   }
 
   while (!dtm->done() && !jtag->done() && !(top->exit_o & 0x1)) {
