@@ -903,6 +903,9 @@ def load_config(args, cwd):
       args.mabi = "ilp32"
       args.isa  = "rv32imc_zba_zbb_zbs_zbc"
       args.priv  = "m"
+    elif base == "cv128": 
+      args.mabi = "llp128d"
+      args.isa = "rv128gc_zba_zbb_zbs_zbc"
     elif base == "cv64a6_mmu":
       args.mabi = "lp64"
       args.isa  = "rv64imac_zba_zbb_zbs_zbc"
