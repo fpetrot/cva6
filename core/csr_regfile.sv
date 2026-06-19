@@ -212,14 +212,15 @@ module csr_regfile
     output logic [CVA6Cfg.XLEN-1:0] sdtrig_commit_action_o,
     output logic sdtrig_commit_std_exception_valid_o
 );
-  localparam logic [63:0] SMODE_STATUS_READ_MASK = ariane_pkg::smode_status_read_mask(CVA6Cfg);
-  localparam logic [63:0] HS_DELEG_INTERRUPTS = {
-    {32{1'b0}}, ariane_pkg::hs_deleg_interrupts(CVA6Cfg)
+  // FIXME: Shouldn't we be using for XLEN dependent formula here?
+  localparam logic [127:0] SMODE_STATUS_READ_MASK = ariane_pkg::smode_status_read_mask(CVA6Cfg);
+  localparam logic [127:0] HS_DELEG_INTERRUPTS = {
+    {96{1'b0}}, ariane_pkg::hs_deleg_interrupts(CVA6Cfg)
   };
-  localparam logic [63:0] VS_DELEG_INTERRUPTS = {
-    {32{1'b0}}, ariane_pkg::vs_deleg_interrupts(CVA6Cfg)
+  localparam logic [127:0] VS_DELEG_INTERRUPTS = {
+    {96{1'b0}}, ariane_pkg::vs_deleg_interrupts(CVA6Cfg)
   };
-  localparam int SELECT_COUNTER_WIDTH = CVA6Cfg.IS_XLEN64 ? 6 : 5;
+  localparam int SELECT_COUNTER_WIDTH = CVA6Cfg.IS_XLEN64 ? 6 : CVA6Cfg.IS_XLEN32 ? 5 : 7;
 
   typedef struct packed {
     logic [CVA6Cfg.ModeW-1:0] mode;
@@ -312,11 +313,11 @@ module csr_regfile
 
   logic wfi_d, wfi_q;
 
-  logic [63:0] cycle_q, cycle_d;
-  logic [63:0] instret_q, instret_d;
+  logic [127:0] cycle_q, cycle_d;
+  logic [127:0] instret_q, instret_d;
 
-  riscv::pmpcfg_t [63:0] pmpcfg_q, pmpcfg_d, pmpcfg_next;
-  logic [63:0][CVA6Cfg.PLEN-3:0] pmpaddr_q, pmpaddr_d, pmpaddr_next;
+  riscv::pmpcfg_t [127:0] pmpcfg_q, pmpcfg_d, pmpcfg_next;
+  logic [127:0][CVA6Cfg.PLEN-3:0] pmpaddr_q, pmpaddr_d, pmpaddr_next;
   logic [MHPMCounterNum+3-1:0] mcountinhibit_d, mcountinhibit_q;
 
   // CBO enable flags from menvcfg/senvcfg/henvcfg
@@ -375,11 +376,12 @@ module csr_regfile
   // ----------------
   // CSR Read logic
   // ----------------
-  assign mstatus_extended = CVA6Cfg.IS_XLEN64 ? mstatus_q[CVA6Cfg.XLEN-1:0] :
+  assign mstatus_extended = (CVA6Cfg.XLEN == 128) ? mstatus_q[CVA6Cfg.XLEN-1:0] :
+                            (CVA6Cfg.XLEN == 64) ?  {mstatus_q.sd, mstatus_q[CVA6Cfg.XLEN-2:0]}:
                               {mstatus_q.sd, mstatus_q.wpri3[7:0], mstatus_q[22:0]};
   assign mstatush = {24'h0, mstatus_q.mpv, mstatus_q.gva, mstatus_q.mbe, mstatus_q.sbe, 4'h0};
   if (CVA6Cfg.RVH) begin
-    if (CVA6Cfg.IS_XLEN64) begin : gen_vsstatus_64read
+    if (CVA6Cfg.IS_XLEN128 || CVA6Cfg.IS_XLEN64) begin : gen_vsstatus_64read
       assign vsstatus_extended = vsstatus_q[CVA6Cfg.XLEN-1:0];
     end else begin : gen_vsstatus_32read
       assign vsstatus_extended = {vsstatus_q.sd, vsstatus_q.wpri3[7:0], vsstatus_q[22:0]};
@@ -675,18 +677,18 @@ module csr_regfile
         // Counters and Timers
         riscv::CSR_MCYCLE: csr_rdata = cycle_q[CVA6Cfg.XLEN-1:0];
         riscv::CSR_MCYCLEH:
-        if (CVA6Cfg.IS_XLEN32) csr_rdata = cycle_q[63:32];
+        if (CVA6Cfg.IS_XLEN32) csr_rdata = cycle_q[127:96];
         else read_access_exception = 1'b1;
         riscv::CSR_MINSTRET: csr_rdata = instret_q[CVA6Cfg.XLEN-1:0];
         riscv::CSR_MINSTRETH:
-        if (CVA6Cfg.IS_XLEN32) csr_rdata = instret_q[63:32];
+        if (CVA6Cfg.IS_XLEN32) csr_rdata = instret_q[127:96];
         else read_access_exception = 1'b1;
         riscv::CSR_CYCLE:
         if (CVA6Cfg.RVZicntr) csr_rdata = cycle_q[CVA6Cfg.XLEN-1:0];
         else read_access_exception = 1'b1;
         riscv::CSR_CYCLEH:
         if (CVA6Cfg.RVZicntr)
-          if (CVA6Cfg.IS_XLEN32) csr_rdata = cycle_q[63:32];
+          if (CVA6Cfg.IS_XLEN32) csr_rdata = cycle_q[127:96];
           else read_access_exception = 1'b1;
         else read_access_exception = 1'b1;
         riscv::CSR_INSTRET:
@@ -694,7 +696,7 @@ module csr_regfile
         else read_access_exception = 1'b1;
         riscv::CSR_INSTRETH:
         if (CVA6Cfg.RVZicntr)
-          if (CVA6Cfg.IS_XLEN32) csr_rdata = instret_q[63:32];
+          if (CVA6Cfg.IS_XLEN32) csr_rdata = instret_q[127:96];
           else read_access_exception = 1'b1;
         else read_access_exception = 1'b1;
         //Event Selector
@@ -895,11 +897,15 @@ module csr_regfile
           // index is calculated using PMPCFG0 as the offset
           automatic logic [3:0] index = csr_addr.address[11:0] - riscv::CSR_PMPCFG0;
 
-          // if index is not even and XLEN==64, raise exception
-          if (CVA6Cfg.IS_XLEN64 && index[0] == 1'b1) read_access_exception = 1'b1;
+          // Raise exception on unaligned access (64-bit: even only, 128-bit: mod 4 == 0 only)
+          if ((CVA6Cfg.IS_XLEN64 && index[0] == 1'b1) ||
+              (CVA6Cfg.IS_XLEN128 && index[1:0] != 2'b00))
+            read_access_exception = 1'b1;
           else begin
-            // The following line has no effect. It's here just to prevent the synthesizer from crashing
+            // The following lines has no effect. It's here just to prevent the synthesizer from crashing
             if (CVA6Cfg.IS_XLEN64) index = (index >> 1) << 1;
+            else if (CVA6Cfg.XLEN == 128) index = (index >> 2) << 2;
+
             csr_rdata = pmpcfg_q[index*4+:CVA6Cfg.XLEN/8];
           end
         end
@@ -990,7 +996,7 @@ module csr_regfile
     automatic satp_t satp;
     automatic satp_t vsatp;
     automatic hgatp_t hgatp;
-    automatic logic [63:0] instret;
+    automatic logic [127:0] instret;
 
     mtval_d = '0;
 
@@ -1261,7 +1267,7 @@ module csr_regfile
         riscv::CSR_VSSTATUS: begin
           if (CVA6Cfg.RVH) begin
             mask = ariane_pkg::SMODE_STATUS_WRITE_MASK[CVA6Cfg.XLEN-1:0];
-            vsstatus_d = (vsstatus_q & ~{{64-CVA6Cfg.XLEN{1'b0}}, mask}) | {{64-CVA6Cfg.XLEN{1'b0}}, (csr_wdata & mask)};
+            vsstatus_d = (vsstatus_q & ~{{128-CVA6Cfg.XLEN{1'b0}}, mask}) | {{128-CVA6Cfg.XLEN{1'b0}}, (csr_wdata & mask)};
             // hardwire to zero if floating point extension is not present
             vsstatus_d.xs = riscv::Off;
             if (!CVA6Cfg.FpPresent) begin
@@ -1329,7 +1335,7 @@ module csr_regfile
         riscv::CSR_SSTATUS: begin
           if (CVA6Cfg.RVS) begin
             mask = ariane_pkg::SMODE_STATUS_WRITE_MASK[CVA6Cfg.XLEN-1:0];
-            mstatus_d = (mstatus_q & ~{{64-CVA6Cfg.XLEN{1'b0}}, mask}) | {{64-CVA6Cfg.XLEN{1'b0}}, (csr_wdata & mask)};
+            mstatus_d = (mstatus_q & ~{{128-CVA6Cfg.XLEN{1'b0}}, mask}) | {{128-CVA6Cfg.XLEN{1'b0}}, (csr_wdata & mask)};
             // hardwire to zero if floating point extension is not present
             if (!CVA6Cfg.FpPresent) begin
               mstatus_d.fs = riscv::Off;
@@ -1431,7 +1437,7 @@ module csr_regfile
         riscv::CSR_HSTATUS: begin
           if (CVA6Cfg.RVH) begin
             mask = ariane_pkg::HSTATUS_WRITE_MASK[CVA6Cfg.XLEN-1:0];
-            hstatus_d = (hstatus_q & ~{{64-CVA6Cfg.XLEN{1'b0}}, mask}) | {{64-CVA6Cfg.XLEN{1'b0}}, (csr_wdata & mask)};
+            hstatus_d = (hstatus_q & ~{{128-CVA6Cfg.XLEN{1'b0}}, mask}) | {{128-CVA6Cfg.XLEN{1'b0}}, (csr_wdata & mask)};
             // this instruction has side-effects
             flush_o = 1'b1;
           end else begin
@@ -1555,7 +1561,7 @@ module csr_regfile
           end
         end
         riscv::CSR_MSTATUS: begin
-          mstatus_d    = {{64 - CVA6Cfg.XLEN{1'b0}}, csr_wdata};
+          mstatus_d    = {{128 - CVA6Cfg.XLEN{1'b0}}, csr_wdata};
           mstatus_d.xs = riscv::Off;
           if (!CVA6Cfg.FpPresent) begin
             mstatus_d.fs = riscv::Off;
@@ -1886,8 +1892,10 @@ module csr_regfile
           // index is calculated using PMPCFG0 as the offset
           automatic logic [11:0] index = csr_addr.address[11:0] - riscv::CSR_PMPCFG0;
 
-          // if index is not even and XLEN==64, raise exception
-          if (CVA6Cfg.IS_XLEN64 && index[0] == 1'b1) update_access_exception = 1'b1;
+          // Raise exception on unaligned access (64-bit: even only, 128-bit: mod 4 == 0 only)
+          if ((CVA6Cfg.IS_XLEN64  && index[0]  == 1'b1) ||
+              (CVA6Cfg.IS_XLEN128 && index[1:0] != 2'b00))
+            update_access_exception = 1'b1;
           else begin
             for (int i = 0; i < CVA6Cfg.XLEN / 8; i++) begin
               if (!pmpcfg_q[index*4+i].locked) pmpcfg_d[index*4+i] = csr_wdata[i*8+:8];
@@ -2791,7 +2799,7 @@ module csr_regfile
         dscratch1_q  <= {CVA6Cfg.XLEN{1'b0}};
       end
       // machine mode registers
-      mstatus_q        <= 64'b0;
+      mstatus_q        <= {CVA6Cfg.XLEN{1'b0}};
       // set to boot address + direct mode + 4 byte offset which is the initial trap
       mtvec_rst_load_q <= 1'b1;
       mtvec_q          <= '0;
@@ -2832,7 +2840,7 @@ module csr_regfile
         v_q                      <= '0;
         mtval2_q                 <= {CVA6Cfg.XLEN{1'b0}};
         mtinst_q                 <= {CVA6Cfg.XLEN{1'b0}};
-        hstatus_q                <= 64'b0;
+        hstatus_q                <= {CVA6Cfg.XLEN{1'b0}};
         hedeleg_q                <= {CVA6Cfg.XLEN{1'b0}};
         hideleg_q                <= {CVA6Cfg.XLEN{1'b0}};
         hgeie_q                  <= {CVA6Cfg.XLEN{1'b0}};
@@ -2841,7 +2849,7 @@ module csr_regfile
         htval_q                  <= {CVA6Cfg.XLEN{1'b0}};
         htinst_q                 <= {CVA6Cfg.XLEN{1'b0}};
         // virtual supervisor mode registers
-        vsstatus_q               <= 64'b0;
+        vsstatus_q               <= {CVA6Cfg.XLEN{1'b0}};
         vsepc_q                  <= {CVA6Cfg.XLEN{1'b0}};
         vscause_q                <= {CVA6Cfg.XLEN{1'b0}};
         vstvec_q                 <= {CVA6Cfg.XLEN{1'b0}};
@@ -2858,14 +2866,14 @@ module csr_regfile
         scontext_q <= '0;
       end
       // timer and counters
-      cycle_q                <= 64'b0;
-      instret_q              <= 64'b0;
+      cycle_q                <= 128'b0;
+      instret_q              <= 128'b0;
       // aux registers
       en_ld_st_translation_q <= 1'b0;
       // wait for interrupt
       wfi_q                  <= 1'b0;
       // pmp
-      for (int i = 0; i < 64; i++) begin
+      for (int i = 0; i < 128; i++) begin
         if (i < CVA6Cfg.NrPMPEntries) begin
           pmpcfg_q[i]  <= riscv::pmpcfg_t'(CVA6Cfg.PMPCfgRstVal[i]);
           pmpaddr_q[i] <= CVA6Cfg.PMPAddrRstVal[i][CVA6Cfg.PLEN-3:0];

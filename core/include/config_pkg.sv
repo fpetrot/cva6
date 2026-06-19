@@ -282,6 +282,7 @@ package config_pkg;
     int unsigned GPLEN;
     bit IS_XLEN32;
     bit IS_XLEN64;
+    bit IS_XLEN128;
     int unsigned XLEN_ALIGN_BYTES;
     int unsigned ASID_WIDTH;
     int unsigned VMID_WIDTH;
