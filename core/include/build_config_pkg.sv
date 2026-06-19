@@ -2,7 +2,8 @@ package build_config_pkg;
 
   function automatic config_pkg::cva6_cfg_t build_config(config_pkg::cva6_user_cfg_t CVA6Cfg);
     bit IS_XLEN32 = (CVA6Cfg.XLEN == 32) ? 1'b1 : 1'b0;
-    bit IS_XLEN64 = (CVA6Cfg.XLEN == 32) ? 1'b0 : 1'b1;
+    bit IS_XLEN64 = (CVA6Cfg.XLEN == 64) ? 1'b1 : 1'b0;
+    bit IS_XLEN128 = (CVA6Cfg.XLEN == 128) ? 1'b1 : 1'b0;
     bit FpPresent = CVA6Cfg.RVF | CVA6Cfg.RVD | CVA6Cfg.XF16 | CVA6Cfg.XF16ALT | CVA6Cfg.XF8;
     bit NSX = CVA6Cfg.XF16 | CVA6Cfg.XF16ALT | CVA6Cfg.XF8 | CVA6Cfg.XFVec;  // Are non-standard extensions present?
     int unsigned FLen = CVA6Cfg.RVD ? 64 :  // D ext.
@@ -33,10 +34,11 @@ package build_config_pkg;
 
     cfg.XLEN = CVA6Cfg.XLEN;
     cfg.VLEN = CVA6Cfg.VLEN;
-    cfg.PLEN = IS_XLEN32 ? 34 : 56;
-    cfg.GPLEN = IS_XLEN32 ? 34 : 41;
+    cfg.PLEN = IS_XLEN128 ? 128 : (CVA6Cfg.XLEN == 64) ? 56 : 34;
+    cfg.GPLEN = IS_XLEN128 ? 128 : (CVA6Cfg.XLEN == 64) ? 41 : 34;
     cfg.IS_XLEN32 = IS_XLEN32;
     cfg.IS_XLEN64 = IS_XLEN64;
+    cfg.IS_XLEN128 = IS_XLEN128;
     cfg.XLEN_ALIGN_BYTES = $clog2(CVA6Cfg.XLEN / 8);
     cfg.ASID_WIDTH = IS_XLEN64 ? 16 : 1;
     cfg.VMID_WIDTH = IS_XLEN64 ? 14 : 1;

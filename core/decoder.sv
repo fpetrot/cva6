@@ -470,60 +470,76 @@ module decoder
             3'b001: instruction_o.op = ariane_pkg::FENCE_I;
             // CBO - optional
             3'b010: begin
-              if (CVA6Cfg.RVZiCbom) begin
-                instruction_o.fu = STORE;
-                instruction_o.rs1[4:0] = instr.itype.rs1;
-                // not used - zero
-                instruction_o.rs2[4:0] = '0;
-                unique case (instr.itype.imm)
-                  // CBO.INVAL
-                  12'b000000000000: instruction_o.op = ariane_pkg::CBO_INVAL;
-                  // CBO.CLEAN
-                  12'b000000000001: instruction_o.op = ariane_pkg::CBO_CLEAN;
-                  // CBO.FLUSH
-                  12'b000000000010: instruction_o.op = ariane_pkg::CBO_FLUSH;
-                  default: illegal_instr = 1'b1;
-                endcase
+              // differentiate rv128 LQ and CBO instructions
+              case (instr.itype.rd)
+                5'b00000: begin  // CMO extension
+                  if (CVA6Cfg.RVZiCbom) begin
+                    instruction_o.fu = STORE;
+                    instruction_o.rs1[4:0] = instr.itype.rs1;
+                    // not used - zero
+                    instruction_o.rs2[4:0] = '0;
+                    unique case (instr.itype.imm)
+                      // CBO.INVAL
+                      12'b000000000000: instruction_o.op = ariane_pkg::CBO_INVAL;
+                      // CBO.CLEAN
+                      12'b000000000001: instruction_o.op = ariane_pkg::CBO_CLEAN;
+                      // CBO.FLUSH
+                      12'b000000000010: instruction_o.op = ariane_pkg::CBO_FLUSH;
+                      default: illegal_instr = 1'b1;
+                    endcase
 
-                if (instruction_o.op == ariane_pkg::CBO_INVAL) begin
-                  // permissions checks
-                  if((priv_lvl_i != riscv::PRIV_LVL_M && mcbie_i == riscv::CBIE_ILLEGAL) ||
-                    (CVA6Cfg.RVU && priv_lvl_i == riscv::PRIV_LVL_U && scbie_i == riscv::CBIE_ILLEGAL)) begin
-                    // disabled in M-mode / S-mode
-                    illegal_instr = 1'b1;
-                  end
-                  else if((priv_lvl_i == riscv::PRIV_LVL_HS && hcbie_i == riscv::CBIE_ILLEGAL) ||
-                    (priv_lvl_i == riscv::PRIV_LVL_U && hu_i) ) begin
-                    // disabled in HS-mode / H-mode
-                    virtual_illegal_instr = 1'b1;
-                  end else begin
-                    if((priv_lvl_i != riscv::PRIV_LVL_M && mcbie_i == riscv::CBIE_FLUSH) || 
-                      (priv_lvl_i == riscv::PRIV_LVL_U && scbie_i == riscv::CBIE_FLUSH) ||
-                      (priv_lvl_i == riscv::PRIV_LVL_HS && hcbie_i == riscv::CBIE_FLUSH) ||
-                      (priv_lvl_i == riscv::PRIV_LVL_U && hu_i && (hcbie_i == riscv::CBIE_FLUSH || scbie_i == riscv::CBIE_FLUSH))) begin
-                      // have to flush instead of invalidate
-                      instruction_o.op = ariane_pkg::CBO_FLUSH;
+                    if (instruction_o.op == ariane_pkg::CBO_INVAL) begin
+                      // permissions checks
+                      if((priv_lvl_i != riscv::PRIV_LVL_M && mcbie_i == riscv::CBIE_ILLEGAL) ||
+                        (CVA6Cfg.RVU && priv_lvl_i == riscv::PRIV_LVL_U && scbie_i == riscv::CBIE_ILLEGAL)) begin
+                        // disabled in M-mode / S-mode
+                        illegal_instr = 1'b1;
+                      end
+                      else if((priv_lvl_i == riscv::PRIV_LVL_HS && hcbie_i == riscv::CBIE_ILLEGAL) ||
+                        (priv_lvl_i == riscv::PRIV_LVL_U && hu_i) ) begin
+                        // disabled in HS-mode / H-mode
+                        virtual_illegal_instr = 1'b1;
+                      end else begin
+                        if((priv_lvl_i != riscv::PRIV_LVL_M && mcbie_i == riscv::CBIE_FLUSH) ||
+                          (priv_lvl_i == riscv::PRIV_LVL_U && scbie_i == riscv::CBIE_FLUSH) ||
+                          (priv_lvl_i == riscv::PRIV_LVL_HS && hcbie_i == riscv::CBIE_FLUSH) ||
+                          (priv_lvl_i == riscv::PRIV_LVL_U && hu_i && (hcbie_i == riscv::CBIE_FLUSH || scbie_i == riscv::CBIE_FLUSH))) begin
+                          // have to flush instead of invalidate
+                          instruction_o.op = ariane_pkg::CBO_FLUSH;
+                        end
+                      end
+                      // otherwise: normal invalidate
                     end
-                  end
-                  // otherwise: normal invalidate
-                end
 
-                if (instruction_o.op inside {ariane_pkg::CBO_CLEAN, ariane_pkg::CBO_FLUSH}) begin
-                  if((priv_lvl_i != riscv::PRIV_LVL_M && !mcbcfe_i) ||
-                    (priv_lvl_i == riscv::PRIV_LVL_U && !scbcfe_i)) begin
-                    // disabled in m-mode / s-mode
+                    if (instruction_o.op inside {ariane_pkg::CBO_CLEAN, ariane_pkg::CBO_FLUSH}) begin
+                      if((priv_lvl_i != riscv::PRIV_LVL_M && !mcbcfe_i) ||
+                        (priv_lvl_i == riscv::PRIV_LVL_U && !scbcfe_i)) begin
+                        // disabled in m-mode / s-mode
+                        illegal_instr = 1'b1;
+                      end
+                      else if((priv_lvl_i == riscv::PRIV_LVL_HS && !hcbcfe_i) ||
+                              (priv_lvl_i == riscv::PRIV_LVL_U && hu_i && !(hcbcfe_i && scbcfe_i))) begin
+                        // disabled in HS-mode / H-mode
+                        virtual_illegal_instr = 1'b1;
+                      end
+                      // otherwise: normal flush / clean
+                    end
+                  end else begin
                     illegal_instr = 1'b1;
                   end
-                  else if((priv_lvl_i == riscv::PRIV_LVL_HS && !hcbcfe_i) ||
-                          (priv_lvl_i == riscv::PRIV_LVL_U && hu_i && !(hcbcfe_i && scbcfe_i))) begin
-                    // disabled in HS-mode / H-mode
-                    virtual_illegal_instr = 1'b1;
-                  end
-                  // otherwise: normal flush / clean
                 end
-              end else begin
-                illegal_instr = 1'b1;
-              end
+
+                default: begin  // RV128 only
+                  if (CVA6Cfg.IS_XLEN128) begin
+                    instruction_o.op = ariane_pkg::LQ;
+                    instruction_o.fu = LOAD;
+                    imm_select = IIMM;
+                    instruction_o.rs1 = instr.itype.rs1;
+                    instruction_o.rd = instr.itype.rd;
+                  end else illegal_instr = 1'b1;
+                end
+
+              endcase
 
               if (CVA6Cfg.RVH) begin
                 tinst = {
@@ -531,7 +547,6 @@ module decoder
                 };
               end
             end
-
 
             default: illegal_instr = 1'b1;
           endcase
@@ -881,7 +896,7 @@ module decoder
                 {
                   7'b000_0100, 3'b100
                 } : begin
-                  if (!CVA6Cfg.IS_XLEN64 && instr.instr[24:20] == 5'b00000)
+                  if (!(CVA6Cfg.IS_XLEN64 || CVA6Cfg.IS_XLEN128) && instr.instr[24:20] == 5'b00000)
                     instruction_o.op = ariane_pkg::ZEXTH;  // Zero Extend Op RV32 encoding
                   else if (CVA6Cfg.ZKN) instruction_o.op = ariane_pkg::PACK;  // pack
                   else illegal_instr_bm = 1'b1;
@@ -1068,7 +1083,7 @@ module decoder
           instruction_o.rs1 = instr.rtype.rs1;
           instruction_o.rs2 = instr.rtype.rs2;
           instruction_o.rd  = instr.rtype.rd;
-          if (CVA6Cfg.IS_XLEN64) begin
+          if (CVA6Cfg.IS_XLEN64 || CVA6Cfg.IS_XLEN128) begin
             unique case ({
               instr.rtype.funct7, instr.rtype.funct3
             })
@@ -1114,6 +1129,36 @@ module decoder
             end
           end else illegal_instr = 1'b1;
         end
+
+        // --------------------------
+        // 64bit Reg-Reg Operations
+        // --------------------------
+        riscv::OpcodeOp64: begin
+          instruction_o.fu  = (instr.rtype.funct7 == 7'b000_0001) ? MULT : ALU;
+          instruction_o.rs1 = instr.rtype.rs1;
+          instruction_o.rs2 = instr.rtype.rs2;
+          instruction_o.rd  = instr.rtype.rd;
+          if (CVA6Cfg.IS_XLEN128) begin
+            unique case ({
+              instr.rtype.funct7, instr.rtype.funct3
+            })
+              {7'b000_0000, 3'b000} : instruction_o.op = ariane_pkg::ADDD;  // addd
+              {7'b010_0000, 3'b000} : instruction_o.op = ariane_pkg::SUBD;  // subd
+              {7'b000_0000, 3'b001} : instruction_o.op = ariane_pkg::SLLD;  // slld
+              {7'b000_0000, 3'b101} : instruction_o.op = ariane_pkg::SRLD;  // srld
+              {7'b010_0000, 3'b101} : instruction_o.op = ariane_pkg::SRAD;  // srad
+              // Multiplications
+              {7'b000_0001, 3'b000} : instruction_o.op = ariane_pkg::MULD;
+              {7'b000_0001, 3'b100} : instruction_o.op = ariane_pkg::DIVD;
+              {7'b000_0001, 3'b101} : instruction_o.op = ariane_pkg::DIVUD;
+              {7'b000_0001, 3'b110} : instruction_o.op = ariane_pkg::REMD;
+              {7'b000_0001, 3'b111} : instruction_o.op = ariane_pkg::REMUD;
+              default: illegal_instr_non_bm = 1'b1;
+            endcase
+            illegal_instr = illegal_instr_non_bm;
+          end else illegal_instr = 1'b1;
+        end
+
         // --------------------------------
         // Reg-Immediate Operations
         // --------------------------------
@@ -1133,16 +1178,18 @@ module decoder
 
             3'b001: begin
               instruction_o.op = ariane_pkg::SLL;  // Shift Left Logical by Immediate
-              if (instr.instr[31:26] != 6'b0) illegal_instr_non_bm = 1'b1;
+              if (instr.instr[31:27] != 5'b0) illegal_instr_non_bm = 1'b1;
+              if (instr.instr[26] != 1'b0 && ~CVA6Cfg.IS_XLEN128) illegal_instr_non_bm = 1'b1;
               if (instr.instr[25] != 1'b0 && CVA6Cfg.IS_XLEN32) illegal_instr_non_bm = 1'b1;
             end
 
             3'b101: begin
-              if (instr.instr[31:26] == 6'b0)
+              if (instr.instr[31:27] == 5'b0)
                 instruction_o.op = ariane_pkg::SRL;  // Shift Right Logical by Immediate
-              else if (instr.instr[31:26] == 6'b010_000)
+              else if (instr.instr[31:27] == 5'b010_00)
                 instruction_o.op = ariane_pkg::SRA;  // Shift Right Arithmetically by Immediate
               else illegal_instr_non_bm = 1'b1;
+              if (instr.instr[26] != 1'b0 && ~CVA6Cfg.IS_XLEN128) illegal_instr_non_bm = 1'b1;
               if (instr.instr[25] != 1'b0 && CVA6Cfg.IS_XLEN32) illegal_instr_non_bm = 1'b1;
             end
           endcase
@@ -1156,14 +1203,20 @@ module decoder
                   else if (instr.instr[24:20] == 5'b00000) instruction_o.op = ariane_pkg::CLZ;
                   else if (instr.instr[24:20] == 5'b00001) instruction_o.op = ariane_pkg::CTZ;
                   else illegal_instr_bm = 1'b1;
-                end else if (CVA6Cfg.IS_XLEN64 && instr.instr[31:26] == 6'b010010)
+                end else if (CVA6Cfg.IS_XLEN128 && instr.instr[31:27] == 5'b01001)
+                  instruction_o.op = ariane_pkg::BCLRI;
+                else if (CVA6Cfg.IS_XLEN64 && instr.instr[31:26] == 6'b010010)
                   instruction_o.op = ariane_pkg::BCLRI;
                 else if (CVA6Cfg.IS_XLEN32 && instr.instr[31:25] == 7'b0100100)
                   instruction_o.op = ariane_pkg::BCLRI;
+                else if (CVA6Cfg.IS_XLEN128 && instr.instr[31:27] == 5'b01101)
+                  instruction_o.op = ariane_pkg::BINVI;
                 else if (CVA6Cfg.IS_XLEN64 && instr.instr[31:26] == 6'b011010)
                   instruction_o.op = ariane_pkg::BINVI;
                 else if (CVA6Cfg.IS_XLEN32 && instr.instr[31:25] == 7'b0110100)
                   instruction_o.op = ariane_pkg::BINVI;
+                else if (CVA6Cfg.IS_XLEN128 && instr.instr[31:27] == 5'b00101)
+                  instruction_o.op = ariane_pkg::BSETI;
                 else if (CVA6Cfg.IS_XLEN64 && instr.instr[31:26] == 6'b001010)
                   instruction_o.op = ariane_pkg::BSETI;
                 else if (CVA6Cfg.IS_XLEN32 && instr.instr[31:25] == 7'b0010100)
@@ -1204,14 +1257,18 @@ module decoder
               end
               3'b101: begin
                 if (instr.instr[31:20] == 12'b001010000111) instruction_o.op = ariane_pkg::ORCB;
-                else if (CVA6Cfg.IS_XLEN64 && instr.instr[31:20] == 12'b011010111000)
+                else if ((CVA6Cfg.IS_XLEN64 || CVA6Cfg.IS_XLEN128) && instr.instr[31:20] == 12'b011010111000)
                   instruction_o.op = ariane_pkg::REV8;
                 else if (instr.instr[31:20] == 12'b011010011000)
                   instruction_o.op = ariane_pkg::REV8;
+                else if (CVA6Cfg.IS_XLEN128 && instr.instr[31:27] == 5'b010_01)
+                  instruction_o.op = ariane_pkg::BEXTI;
                 else if (CVA6Cfg.IS_XLEN64 && instr.instr[31:26] == 6'b010_010)
                   instruction_o.op = ariane_pkg::BEXTI;
                 else if (CVA6Cfg.IS_XLEN32 && instr.instr[31:25] == 7'b010_0100)
                   instruction_o.op = ariane_pkg::BEXTI;
+                else if (CVA6Cfg.IS_XLEN128 && instr.instr[31:27] == 5'b011_00)
+                  instruction_o.op = ariane_pkg::RORI;
                 else if (CVA6Cfg.IS_XLEN64 && instr.instr[31:26] == 6'b011_000)
                   instruction_o.op = ariane_pkg::RORI;
                 else if (CVA6Cfg.IS_XLEN32 && instr.instr[31:25] == 7'b011_0000)
@@ -1238,7 +1295,7 @@ module decoder
           imm_select = IIMM;
           instruction_o.rs1 = instr.itype.rs1;
           instruction_o.rd = instr.itype.rd;
-          if (CVA6Cfg.IS_XLEN64) begin
+          if (CVA6Cfg.IS_XLEN64 || CVA6Cfg.IS_XLEN128) begin
             unique case (instr.itype.funct3)
               3'b000:  instruction_o.op = ariane_pkg::ADDW;  // Add Immediate
               3'b001: begin
@@ -1279,6 +1336,35 @@ module decoder
 
           end else illegal_instr = 1'b1;
         end
+
+        // --------------------------------
+        // 64 bit Reg-Immediate Operations
+        // --------------------------------
+        riscv::OpcodeOpImm64: begin
+          instruction_o.fu = ALU;
+          imm_select = IIMM;
+          instruction_o.rs1 = instr.itype.rs1;
+          instruction_o.rd = instr.itype.rd;
+          if (CVA6Cfg.IS_XLEN128) begin
+            unique case (instr.itype.funct3)
+              3'b000:  instruction_o.op = ariane_pkg::ADDD;  // Add Immediate
+              3'b001: begin
+                instruction_o.op = ariane_pkg::SLLD;  // Shift Left Logical by Immediate
+                if (instr.instr[31:26] != 6'b00_0000) illegal_instr_non_bm = 1'b1;
+              end
+              3'b101: begin
+                if (instr.instr[31:26] == 6'b00_0000)
+                  instruction_o.op = ariane_pkg::SRLD;  // Shift Right Logical by Immediate
+                else if (instr.instr[31:26] == 6'b01_0000)
+                  instruction_o.op = ariane_pkg::SRAD;  // Shift Right Arithmetically by Immediate
+                else illegal_instr_non_bm = 1'b1;
+              end
+              default: illegal_instr_non_bm = 1'b1;
+            endcase
+            illegal_instr = illegal_instr_non_bm;
+          end else illegal_instr = 1'b1;
+        end
+
         // --------------------------------
         // LSU
         // --------------------------------
@@ -1293,7 +1379,10 @@ module decoder
             3'b001: instruction_o.op = ariane_pkg::SH;
             3'b010: instruction_o.op = ariane_pkg::SW;
             3'b011:
-            if (CVA6Cfg.IS_XLEN64) instruction_o.op = ariane_pkg::SD;
+            if (CVA6Cfg.IS_XLEN64 || CVA6Cfg.IS_XLEN128) instruction_o.op = ariane_pkg::SD;
+            else illegal_instr = 1'b1;
+            3'b100:
+            if (CVA6Cfg.IS_XLEN128) instruction_o.op = ariane_pkg::SQ;
             else illegal_instr = 1'b1;
             default: illegal_instr = 1'b1;
           endcase
@@ -1316,10 +1405,13 @@ module decoder
             3'b100: instruction_o.op = ariane_pkg::LBU;
             3'b101: instruction_o.op = ariane_pkg::LHU;
             3'b110:
-            if (CVA6Cfg.IS_XLEN64) instruction_o.op = ariane_pkg::LWU;
+            if (CVA6Cfg.IS_XLEN64 || CVA6Cfg.IS_XLEN128) instruction_o.op = ariane_pkg::LWU;
             else illegal_instr = 1'b1;
             3'b011:
             if (CVA6Cfg.IS_XLEN64) instruction_o.op = ariane_pkg::LD;
+            else illegal_instr = 1'b1;
+            3'b111:
+            if (CVA6Cfg.IS_XLEN128) instruction_o.op = ariane_pkg::LDU;
             else illegal_instr = 1'b1;
             default: illegal_instr = 1'b1;
           endcase
@@ -1626,7 +1718,7 @@ module decoder
               default: illegal_instr = 1'b1;
             endcase
             // double words
-          end else if (CVA6Cfg.IS_XLEN64 && CVA6Cfg.RVA && instr.stype.funct3 == 3'h3) begin
+          end else if ((CVA6Cfg.IS_XLEN64 || CVA6Cfg.IS_XLEN128) && CVA6Cfg.RVA && instr.stype.funct3 == 3'h3) begin
             unique case (instr.instr[31:27])
               5'h0: instruction_o.op = ariane_pkg::AMO_ADDD;
               5'h1: instruction_o.op = ariane_pkg::AMO_SWAPD;
