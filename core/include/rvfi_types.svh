@@ -159,13 +159,13 @@
   logic [Cfg.XLEN-1:0] mtval_q; \
   logic fiom_q; \
   logic [ariane_pkg::MHPMCounterNum+3-1:0] mcountinhibit_q; \
-  logic [63:0] cycle_q; \
-  logic [63:0] instret_q; \
+  logic [127:0] cycle_q; \
+  logic [127:0] instret_q; \
   logic [Cfg.XLEN-1:0] dcache_q; \
   logic [Cfg.XLEN-1:0] icache_q; \
   logic [Cfg.XLEN-1:0] acc_cons_q; \
-  riscv::pmpcfg_t [63:0] pmpcfg_q; \
-  logic [63:0][Cfg.PLEN-3:0] pmpaddr_q; \
+  riscv::pmpcfg_t [127:0] pmpcfg_q; \
+  logic [127:0][Cfg.PLEN-3:0] pmpaddr_q; \
 }
 
 `define RVFI_TO_ITI_T(Cfg) struct packed { \
@@ -179,7 +179,7 @@
   logic [Cfg.XLEN-1:0] tval; \
   logic [Cfg.XLEN-1:0] cause; \
   riscv::priv_lvl_t priv_lvl; \
-  logic [63:0] cycles; \
+  logic [127:0] cycles; \
 }
 
 `endif  // RVFI_TYPES_SVH

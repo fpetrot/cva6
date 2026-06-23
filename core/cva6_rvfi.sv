@@ -58,10 +58,10 @@ module cva6_rvfi
       input logic [CVA6Cfg.XLEN-1:0] reg_val);
     ariane_pkg::amo_t amo_kind;
     logic is_word_op;
-    logic [63:0] operand_a_sext, operand_b_sext;
-    logic [63:0] operand_a_zext, operand_b_zext;
-    logic [63:0] result64;
-    logic [64:0] adder_operand_a, adder_operand_b, adder_sum;
+    logic [127:0] operand_a_sext, operand_b_sext;
+    logic [127:0] operand_a_zext, operand_b_zext;
+    logic [127:0] result128;
+    logic [127+1:0] adder_operand_a, adder_operand_b, adder_sum;
 
     // Decode functional unit opcode into AMO class and width information
     amo_kind   = AMO_NONE;
@@ -161,12 +161,12 @@ module cva6_rvfi
       end
     endcase
 
-    // Create signed and unsigned 64-bit views of the operands (word ops use 32-bit payloads)
+    // Create signed and unsigned 128-bit views of the operands (word ops use 32-bit payloads)
     if (is_word_op) begin
-      operand_a_sext = {{32{mem_old_val[31]}}, mem_old_val[31:0]};
-      operand_b_sext = {{32{reg_val[31]}}, reg_val[31:0]};
-      operand_a_zext = {32'b0, mem_old_val[31:0]};
-      operand_b_zext = {32'b0, reg_val[31:0]};
+      operand_a_sext = {{96{mem_old_val[31]}}, mem_old_val[31:0]};
+      operand_b_sext = {{96{reg_val[31]}}, reg_val[31:0]};
+      operand_a_zext = {96'b0, mem_old_val[31:0]};
+      operand_b_zext = {96'b0, reg_val[31:0]};
     end else begin
       operand_a_sext = $signed(mem_old_val);
       operand_b_sext = $signed(reg_val);
@@ -175,57 +175,57 @@ module cva6_rvfi
     end
 
     // Default to returning the register operand (SWAP/SC path)
-    result64        = operand_b_zext;
-    adder_operand_a = {operand_a_sext[63], operand_a_sext};
-    adder_operand_b = {operand_b_sext[63], operand_b_sext};
+    result128        = operand_b_zext;
+    adder_operand_a = {operand_a_sext[127], operand_a_sext};
+    adder_operand_b = {operand_b_sext[127], operand_b_sext};
     adder_sum       = '0;
 
     unique case (amo_kind)
       AMO_SC, AMO_SWAP: begin
-        result64 = operand_b_zext;
+        result128 = operand_b_zext;
       end
       AMO_ADD: begin
         adder_sum = adder_operand_a + adder_operand_b;
-        result64  = adder_sum[63:0];
+        result128  = adder_sum[127:0];
       end
-      AMO_AND: result64 = operand_a_zext & operand_b_zext;
-      AMO_OR:  result64 = operand_a_zext | operand_b_zext;
-      AMO_XOR: result64 = operand_a_zext ^ operand_b_zext;
+      AMO_AND: result128 = operand_a_zext & operand_b_zext;
+      AMO_OR:  result128 = operand_a_zext | operand_b_zext;
+      AMO_XOR: result128 = operand_a_zext ^ operand_b_zext;
       AMO_MAX: begin
-        adder_operand_b = -{operand_b_sext[63], operand_b_sext};
+        adder_operand_b = -{operand_b_sext[127], operand_b_sext};
         adder_sum       = adder_operand_a + adder_operand_b;
-        result64        = adder_sum[64] ? operand_b_zext : operand_a_zext;
+        result128        = adder_sum[128] ? operand_b_zext : operand_a_zext;
       end
       AMO_MIN: begin
-        adder_operand_b = -{operand_b_sext[63], operand_b_sext};
+        adder_operand_b = -{operand_b_sext[127], operand_b_sext};
         adder_sum       = adder_operand_a + adder_operand_b;
-        result64        = adder_sum[64] ? operand_a_zext : operand_b_zext;
+        result128        = adder_sum[128] ? operand_a_zext : operand_b_zext;
       end
       AMO_MAXU: begin
         adder_operand_a = {1'b0, operand_a_zext};
         adder_operand_b = -{1'b0, operand_b_zext};
         adder_sum       = adder_operand_a + adder_operand_b;
-        result64        = adder_sum[64] ? operand_b_zext : operand_a_zext;
+        result128        = adder_sum[128] ? operand_b_zext : operand_a_zext;
       end
       AMO_MINU: begin
         adder_operand_a = {1'b0, operand_a_zext};
         adder_operand_b = -{1'b0, operand_b_zext};
         adder_sum       = adder_operand_a + adder_operand_b;
-        result64        = adder_sum[64] ? operand_a_zext : operand_b_zext;
+        result128        = adder_sum[128] ? operand_a_zext : operand_b_zext;
       end
       default: begin
-        result64 = operand_b_zext;
+        result128 = operand_b_zext;
       end
     endcase
 
     if (is_word_op) begin
-      return {{CVA6Cfg.XLEN - 32{1'b0}}, result64[31:0]};
+      return {{CVA6Cfg.XLEN - 32{1'b0}}, result128[31:0]};
     end else begin
-      return result64[CVA6Cfg.XLEN-1:0];
+      return result128[CVA6Cfg.XLEN-1:0];
     end
   endfunction
 
-  localparam logic [63:0] SMODE_STATUS_READ_MASK = ariane_pkg::smode_status_read_mask(CVA6Cfg);
+  localparam logic [127:0] SMODE_STATUS_READ_MASK = ariane_pkg::smode_status_read_mask(CVA6Cfg);
 
   logic flush;
   logic [CVA6Cfg.NrIssuePorts-1:0] issue_instr_ack;
@@ -264,7 +264,7 @@ module cva6_rvfi
   logic branch_valid_iti;
   logic is_taken_iti;
   logic [CVA6Cfg.XLEN-1:0] tval_iti;
-  logic [63:0] time_iti;
+  logic [127:0] time_iti;
 
   riscv::priv_lvl_t priv_lvl;
 
