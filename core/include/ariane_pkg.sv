@@ -733,6 +733,10 @@ package ariane_pkg;
     return {{96{operand[31]}}, operand[31:0]};
   endfunction
 
+  function automatic logic [127:0] sext64to128(logic [63:0] operand);
+    return {{64{operand[63]}}, operand[63:0]};
+  endfunction
+
   // ----------------------
   // LSU Functions
   // ----------------------

@@ -89,7 +89,7 @@ module multiplier
   assign mult_valid_o = mult_valid_q;
   assign mult_trans_id_o = trans_id_q;
 
-  assign mult_valid      = mult_valid_i && (operation_i inside {MUL, MULH, MULHU, MULHSU, MULW, CLMUL, CLMULH, CLMULR});
+  assign mult_valid      = mult_valid_i && (operation_i inside {MUL, MULH, MULHU, MULHSU, MULW, MULD, CLMUL, CLMULH, CLMULR});
 
   // Sign Select MUX
   always_comb begin
@@ -129,7 +129,10 @@ module multiplier
       CLMULR:              result_o = clmulr_q;
       // MUL performs an CVA6Cfg.XLEN-bit×CVA6Cfg.XLEN-bit multiplication and places the lower CVA6Cfg.XLEN bits in the destination register
       default: begin
-        if (operator_q == MULW && CVA6Cfg.IS_XLEN64) result_o = sext32to64(mult_result_q[31:0]);
+        if (operator_q == MULW && (CVA6Cfg.IS_XLEN128 || CVA6Cfg.IS_XLEN64))
+          result_o = {{CVA6Cfg.XLEN - 32{mult_result_q[31]}}, mult_result_q[31:0]};
+        else if (operator_q == MULD && CVA6Cfg.IS_XLEN128)
+          result_o = sext64to128(mult_result_q[63:0]);
         else result_o = mult_result_q[CVA6Cfg.XLEN-1:0];  // including MUL
       end
     endcase
