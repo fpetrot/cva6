@@ -228,7 +228,7 @@ module load_unit
   logic inflight_stores;
   logic stall_ni;
   assign paddr_ni = config_pkg::is_inside_nonidempotent_regions(
-      CVA6Cfg, {{52 - CVA6Cfg.PPNW{1'b0}}, dtlb_ppn_i, 12'd0}
+      CVA6Cfg, {{116 - CVA6Cfg.PPNW{1'b0}}, dtlb_ppn_i, 12'd0}
   );
   assign not_commit_time = commit_tran_id_i != lsu_ctrl_i.trans_id;
   assign inflight_stores = (!dcache_wbuffer_not_ni_i || !store_buffer_empty_i);
@@ -563,7 +563,13 @@ module load_unit
         AMO_ANDW, AMO_ORW, AMO_XORW, AMO_MAXW, AMO_MAXWU, AMO_MINW, AMO_MINWU: begin
           endian_data[31:0] = {<<8{shifted_data[31:0]}};
         end
-        default: begin
+        LD, LDU, HLV_D, HLV_DU, HLVX_DU, FLD, AMO_LRD, AMO_SCD, AMO_SWAPD, AMO_ADDD,
+        AMO_ANDD, AMO_ORD, AMO_XORD, AMO_MAXD, AMO_MAXDU, AMO_MIND, AMO_MINDU: begin
+          if (CVA6Cfg.IS_XLEN64 || CVA6Cfg.IS_XLEN128) begin
+            endian_data[63:0] = {<<8{shifted_data[63:0]}};
+          end
+        end
+        default: begin // RV128 case
           endian_data[CVA6Cfg.XLEN-1:0] = {<<8{shifted_data[CVA6Cfg.XLEN-1:0]}};
         end
       endcase
@@ -577,12 +583,13 @@ module load_unit
 
 
   // prepare these signals for faster selection in the next cycle
-  assign rdata_is_signed    =   ldbuf_rdata.operation inside {ariane_pkg::LW,  ariane_pkg::LH,  ariane_pkg::LB, ariane_pkg::HLV_W, ariane_pkg::HLV_H, ariane_pkg::HLV_B};
+  assign rdata_is_signed    =   ldbuf_rdata.operation inside {ariane_pkg::LD, ariane_pkg::LW,  ariane_pkg::LH,  ariane_pkg::LB, ariane_pkg::HLV_W, ariane_pkg::HLV_H, ariane_pkg::HLV_B};
   assign rdata_is_fp_signed =   ldbuf_rdata.operation inside {ariane_pkg::FLW, ariane_pkg::FLH, ariane_pkg::FLB};
   // If we are in Big Endian Mode, we don't need to add anything to the address offset to find the byte that contains the sign bit, as it is always the lowest addressed byte that has the sign bit.
-  assign rdata_offset       = ((ldbuf_rdata.operation inside {ariane_pkg::LW,  ariane_pkg::FLW, ariane_pkg::HLV_W}) && CVA6Cfg.IS_XLEN64 && (~mbe_i)) ? ldbuf_rdata.address_offset + 3 :
-                                ( ldbuf_rdata.operation inside {ariane_pkg::LH,  ariane_pkg::FLH, ariane_pkg::HLV_H} && (~mbe_i))                     ? ldbuf_rdata.address_offset + 1 :
-                                                                                                                         ldbuf_rdata.address_offset;
+  assign rdata_offset       =   ((ldbuf_rdata.operation inside {ariane_pkg::LD}) && (~mbe_i))                                     ? ldbuf_rdata.address_offset + 7 :
+                                ((ldbuf_rdata.operation inside {ariane_pkg::LW, ariane_pkg::FLW, ariane_pkg::HLV_W}) && (~mbe_i)) ? ldbuf_rdata.address_offset + 3 :
+                                (ldbuf_rdata.operation inside {ariane_pkg::LH, ariane_pkg::FLH, ariane_pkg::HLV_H} && (~mbe_i))   ? ldbuf_rdata.address_offset + 1 :
+                                                                                                                                    ldbuf_rdata.address_offset;
 
   for (genvar i = 0; i < (CVA6Cfg.XLEN / 8); i++) begin : gen_sign_bits
     assign rdata_sign_bits[i] = req_port_i.data_rdata[(i+1)*8-1];
@@ -596,6 +603,8 @@ module load_unit
   // result mux
   always_comb begin
     unique case (ldbuf_rdata.operation)
+      ariane_pkg::LD, ariane_pkg::LDU:
+      result_o = {{CVA6Cfg.XLEN - 64{rdata_sign_bit}}, endian_data[63:0]};
       ariane_pkg::LW, ariane_pkg::LWU, ariane_pkg::HLV_W, ariane_pkg::HLV_WU, ariane_pkg::HLVX_WU:
       result_o = {{CVA6Cfg.XLEN - 32{rdata_sign_bit}}, endian_data[31:0]};
       ariane_pkg::LH, ariane_pkg::LHU, ariane_pkg::HLV_H, ariane_pkg::HLV_HU, ariane_pkg::HLVX_HU:

@@ -737,7 +737,33 @@ package ariane_pkg;
   // LSU Functions
   // ----------------------
   // generate byte enable mask
-  function automatic logic [7:0] be_gen(logic [2:0] addr, logic [2:0] size);
+  function automatic logic [3:0] be_gen_32(logic [1:0] addr, logic [1:0] size);
+    case (size)
+      2'b10: begin
+        return 4'b1111;
+      end
+      2'b01: begin
+        case (addr[1:0])
+          2'b00:   return 4'b0011;
+          2'b01:   return 4'b0110;
+          2'b10:   return 4'b1100;
+          default: ;  // Do nothing
+        endcase
+      end
+      2'b00: begin
+        case (addr[1:0])
+          2'b00: return 4'b0001;
+          2'b01: return 4'b0010;
+          2'b10: return 4'b0100;
+          2'b11: return 4'b1000;
+        endcase
+      end
+      default: return 4'b0;
+    endcase
+    return 4'b0;
+  endfunction
+
+  function automatic logic [7:0] be_gen64(logic [2:0] addr, logic [2:0] size);
     case (size)
       3'b011: begin
         return 8'b1111_1111;
@@ -782,31 +808,6 @@ package ariane_pkg;
     return 8'b0;
   endfunction
 
-  function automatic logic [3:0] be_gen_32(logic [1:0] addr, logic [1:0] size);
-    case (size)
-      2'b10: begin
-        return 4'b1111;
-      end
-      2'b01: begin
-        case (addr[1:0])
-          2'b00:   return 4'b0011;
-          2'b01:   return 4'b0110;
-          2'b10:   return 4'b1100;
-          default: ;  // Do nothing
-        endcase
-      end
-      2'b00: begin
-        case (addr[1:0])
-          2'b00: return 4'b0001;
-          2'b01: return 4'b0010;
-          2'b10: return 4'b0100;
-          2'b11: return 4'b1000;
-        endcase
-      end
-      default: return 4'b0;
-    endcase
-    return 4'b0;
-  endfunction
 
   function automatic logic [15:0] be_gen_128(logic [3:0] addr, logic [2:0] size);
     case (size)
@@ -901,7 +902,7 @@ package ariane_pkg;
   // ----------------------
   function automatic logic [1:0] extract_transfer_size(fu_op op);
     case (op)
-      LQ, SQ: return 3'b100;
+      LQ, SQ:                                               return 3'b100;
       LD, LDU, HLV_D, SD, HSV_D, FLD, FSD,
             AMO_LRD,   AMO_SCD,
             AMO_SWAPD, AMO_ADDD,
