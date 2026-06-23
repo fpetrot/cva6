@@ -56,9 +56,9 @@ module wt_axi_adapter
     input logic mbe_i,
 
     // Invalidations
-    input  logic [63:0] inval_addr_i,
-    input  logic        inval_valid_i,
-    output logic        inval_ready_o
+    input  logic [127:0] inval_addr_i,
+    input  logic         inval_valid_i,
+    output logic         inval_ready_o
 );
 
   // support up to 512bit cache lines
@@ -162,9 +162,9 @@ module wt_axi_adapter
     axi_rd_blen  = '0;
 
     if (dcache_data.paddr[2] == 1'b0) begin
-      axi_wr_user = {{64 - CVA6Cfg.AxiUserWidth{1'b0}}, dcache_data.user};
+      axi_wr_user = {{128 - CVA6Cfg.AxiUserWidth{1'b0}}, dcache_data.user};
     end else begin
-      axi_wr_user = {dcache_data.user, {64 - CVA6Cfg.AxiUserWidth{1'b0}}};
+      axi_wr_user = {dcache_data.user, {128 - CVA6Cfg.AxiUserWidth{1'b0}}};
     end
 
     // arbiter mux
@@ -206,18 +206,23 @@ module wt_axi_adapter
           wt_cache_pkg::DCACHE_STORE_REQ: begin
             axi_wr_req = 1'b1;
             axi_wr_be  = '0;
-            unique case (dcache_data.size[1:0])
-              2'b00:
+            unique case (dcache_data.size[2:0])
+              3'b000:
               axi_wr_be[0][dcache_data.paddr[$clog2(CVA6Cfg.AxiDataWidth/8)-1:0]] = '1;  // byte
-              2'b01:
+              3'b001:
               axi_wr_be[0][dcache_data.paddr[$clog2(CVA6Cfg.AxiDataWidth/8)-1:0]+:2] = '1;  // hword
-              2'b10:
+              3'b010:
               axi_wr_be[0][dcache_data.paddr[$clog2(CVA6Cfg.AxiDataWidth/8)-1:0]+:4] = '1;  // word
-              default:
+              3'b011:
               if (CVA6Cfg.IS_XLEN64)
                 axi_wr_be[0][dcache_data.paddr[$clog2(
                     CVA6Cfg.AxiDataWidth/8
                 )-1:0]+:8] = '1;  // dword
+              default:
+              if (CVA6Cfg.IS_XLEN128)
+                axi_wr_be[0][dcache_data.paddr[$clog2(
+                    CVA6Cfg.AxiDataWidth/8
+                )-1:0]+:16] = '1;  // qword
             endcase
           end
           //////////////////////////////////////
@@ -231,18 +236,25 @@ module wt_axi_adapter
               invalidate = arb_gnt;
               axi_wr_req = 1'b1;
               axi_wr_be  = '0;
-              unique case (dcache_data.size[1:0])
-                2'b00:
+              unique case (dcache_data.size[2:0])
+                3'b000:
                 axi_wr_be[0][dcache_data.paddr[$clog2(CVA6Cfg.AxiDataWidth/8)-1:0]] = '1;  // byte
-                2'b01:
+                3'b001:
                 axi_wr_be[0][dcache_data.paddr[$clog2(CVA6Cfg.AxiDataWidth/8)-1:0]+:2] =
                     '1;  // hword
-                2'b10:
+                3'b010:
                 axi_wr_be[0][dcache_data.paddr[$clog2(CVA6Cfg.AxiDataWidth/8)-1:0]+:4] =
                     '1;  // word
+                3'b011:
+                if (CVA6Cfg.IS_XLEN64) begin
+                  axi_wr_be[0][dcache_data.paddr[$clog2(CVA6Cfg.AxiDataWidth/8)-1:0]+:8] =
+                      '1;  // dword
+                end
                 default:
-                axi_wr_be[0][dcache_data.paddr[$clog2(CVA6Cfg.AxiDataWidth/8)-1:0]+:8] =
-                    '1;  // dword
+                if (CVA6Cfg.IS_XLEN128) begin
+                  axi_wr_be[0][dcache_data.paddr[$clog2(CVA6Cfg.AxiDataWidth/8)-1:0]+:16] =
+                      '1;  // qword
+                end
               endcase
               amo_gen_r_d = 1'b1;
               // need to use a separate ID here, so concat an additional bit

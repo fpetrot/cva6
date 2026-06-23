@@ -85,7 +85,7 @@ module std_nbdcache
   logic        [                  NumPorts-1:0][                          55:0] mshr_addr;
   logic        [                  NumPorts-1:0]                                 mshr_addr_matches;
   logic        [                  NumPorts-1:0]                                 mshr_index_matches;
-  logic        [                          63:0]                                 critical_word;
+  logic        [                         127:0]                                 critical_word;
   logic                                                                         critical_word_valid;
 
   logic        [                  NumPorts-1:0][         $bits(miss_req_t)-1:0] miss_req;
@@ -94,7 +94,7 @@ module std_nbdcache
 
   logic        [                  NumPorts-1:0]                                 bypass_gnt;
   logic        [                  NumPorts-1:0]                                 bypass_valid;
-  logic        [                  NumPorts-1:0][                          63:0] bypass_data;
+  logic        [                  NumPorts-1:0][                         127:0] bypass_data;
   // -------------------------------
   // Arbiter <-> Datram,
   // -------------------------------

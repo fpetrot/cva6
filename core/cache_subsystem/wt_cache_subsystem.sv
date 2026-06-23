@@ -70,7 +70,7 @@ module wt_cache_subsystem
     output noc_req_t noc_req_o,
     input noc_resp_t noc_resp_i,
     // Invalidations
-    input logic [63:0] inval_addr_i,
+    input logic [127:0] inval_addr_i,
     input logic inval_valid_i,
     output logic inval_ready_o
     // TODO: interrupt interface
