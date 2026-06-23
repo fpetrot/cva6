@@ -42,6 +42,7 @@ module alu
   logic [CVA6Cfg.XLEN-1:0] operand_a;
   logic [CVA6Cfg.XLEN-1:0] operand_a_rev;
   logic [            31:0] operand_a_rev32;
+  logic [            63:0] operand_a_rev64;
   logic [CVA6Cfg.XLEN-1:0] operand_b;
   logic [  CVA6Cfg.XLEN:0] operand_b_neg;
   logic [CVA6Cfg.XLEN+1:0] adder_result_ext_o;
@@ -70,6 +71,7 @@ module alu
     for (k = 0; k < CVA6Cfg.XLEN; k++) assign operand_a_rev[k] = operand_a[CVA6Cfg.XLEN-1-k];
 
     for (k = 0; k < 32; k++) assign operand_a_rev32[k] = operand_a[31-k];
+    for (k = 0; k < 64; k++) assign operand_a_rev64[k] = operand_a[63-k];
   endgenerate
 
   // ------
@@ -82,14 +84,14 @@ module alu
   logic [CVA6Cfg.XLEN-1:0] operand_a_bitmanip, bit_indx;
   logic [CVA6Cfg.XLEN-1:0] operand_a_cpop;
 
-  assign adder_op_b_negate = fu_data_i.operation inside {EQ, NE, SUB, SUBW, ANDN, ORN, XNOR};
+  assign adder_op_b_negate = fu_data_i.operation inside {EQ, NE, SUB, SUBW, SUBD, ANDN, ORN, XNOR};
 
   always_comb begin
     operand_a_bitmanip = operand_a;
     operand_a_cpop     = fu_data_cpop_i.operand_a;
 
     if (CVA6Cfg.RVB) begin
-      if (CVA6Cfg.IS_XLEN64) begin
+      if (CVA6Cfg.IS_XLEN64 || CVA6Cfg.IS_XLEN128) begin
         unique case (fu_data_i.operation)
           SH1ADDUW:    operand_a_bitmanip = operand_a[31:0] << 1;
           SH2ADDUW:    operand_a_bitmanip = operand_a[31:0] << 2;
@@ -149,47 +151,58 @@ module alu
   logic [CVA6Cfg.XLEN-1:0] shift_amt;  // amount of shift, to the right
   logic [CVA6Cfg.XLEN-1:0] shift_op_a;  // input of the shifter
   logic [            31:0] shift_op_a32;  // input to the 32 bit shift operation
+  logic [            63:0] shift_op_a64;  // input to the 64 bit shift operation
 
   logic [CVA6Cfg.XLEN-1:0] shift_result;
   logic [            31:0] shift_result32;
+  logic [            63:0] shift_result64;
 
   logic [  CVA6Cfg.XLEN:0] shift_right_result;
   logic [            32:0] shift_right_result32;
+  logic [            64:0] shift_right_result64;
 
   logic [CVA6Cfg.XLEN-1:0] shift_left_result;
   logic [            31:0] shift_left_result32;
+  logic [            63:0] shift_left_result64;
 
   assign shift_amt = operand_b;
 
-  assign shift_left = (fu_data_i.operation == SLL) | (CVA6Cfg.IS_XLEN64 && fu_data_i.operation == SLLW);
+  assign shift_left = (fu_data_i.operation == SLL) | (CVA6Cfg.IS_XLEN64 && fu_data_i.operation == SLLW)
+                                                   | (CVA6Cfg.IS_XLEN128 && fu_data_i.operation == SLLD);
 
-  assign shift_arithmetic = (fu_data_i.operation == SRA) | (CVA6Cfg.IS_XLEN64 && fu_data_i.operation == SRAW);
-
+  assign shift_arithmetic = (fu_data_i.operation == SRA) | (CVA6Cfg.IS_XLEN64 && fu_data_i.operation == SRAW)
+                                                         | (CVA6Cfg.IS_XLEN128 && fu_data_i.operation == SRAD);
   // right shifts, we let the synthesizer optimize this
-  logic [CVA6Cfg.XLEN:0] shift_op_a_64;
+  logic [CVA6Cfg.XLEN:0] shift_op_a_128;
+  logic [64:0] shift_op_a_64;
   logic [32:0] shift_op_a_32;
 
   // choose the bit reversed or the normal input for shift operand a
   assign shift_op_a           = shift_left ? operand_a_rev : operand_a;
   assign shift_op_a32         = shift_left ? operand_a_rev32 : operand_a[31:0];
+  assign shift_op_a64         = shift_left ? operand_a_rev64 : operand_a[63:0];
 
-  assign shift_op_a_64        = {shift_arithmetic & shift_op_a[CVA6Cfg.XLEN-1], shift_op_a};
+  assign shift_op_a_128       = {shift_arithmetic & shift_op_a[CVA6Cfg.XLEN-1], shift_op_a};
+  assign shift_op_a_64        = {shift_arithmetic & shift_op_a[63], shift_op_a};
   assign shift_op_a_32        = {shift_arithmetic & shift_op_a[31], shift_op_a32};
 
-  assign shift_right_result   = $unsigned($signed(shift_op_a_64) >>> shift_amt[5:0]);
-
+  assign shift_right_result   = $unsigned($signed(shift_op_a_128) >>> shift_amt[6:0]);
+  assign shift_right_result64 = $unsigned($signed(shift_op_a_64) >>> shift_amt[5:0]);
   assign shift_right_result32 = $unsigned($signed(shift_op_a_32) >>> shift_amt[4:0]);
+
   // bit reverse the shift_right_result for left shifts
   genvar j;
   generate
     for (j = 0; j < CVA6Cfg.XLEN; j++)
       assign shift_left_result[j] = shift_right_result[CVA6Cfg.XLEN-1-j];
 
+    for (j = 0; j < 64; j++) assign shift_left_result64[j] = shift_right_result64[63-j];
     for (j = 0; j < 32; j++) assign shift_left_result32[j] = shift_right_result32[31-j];
 
   endgenerate
 
   assign shift_result   = shift_left ? shift_left_result : shift_right_result[CVA6Cfg.XLEN-1:0];
+  assign shift_result64 = shift_left ? shift_left_result64 : shift_right_result64[63:0];
   assign shift_result32 = shift_left ? shift_left_result32 : shift_right_result32[31:0];
 
   // ------------
@@ -249,6 +262,38 @@ module alu
       {8{|operand_a[31:24]}}, {8{|operand_a[23:16]}}, {8{|operand_a[15:8]}}, {8{|operand_a[7:0]}}
     };
     assign rev8w = {{operand_a[7:0]}, {operand_a[15:8]}, {operand_a[23:16]}, {operand_a[31:24]}};
+    if (CVA6Cfg.IS_XLEN128) begin : gen_128b
+      assign orcbw_result = {
+        {8{|fu_data_i.operand_a[127:120]}},
+        {8{|fu_data_i.operand_a[119:112]}},
+        {8{|fu_data_i.operand_a[111:104]}},
+        {8{|fu_data_i.operand_a[103:96]}},
+        {8{|fu_data_i.operand_a[95:88]}},
+        {8{|fu_data_i.operand_a[87:80]}},
+        {8{|fu_data_i.operand_a[79:72]}},
+        {8{|fu_data_i.operand_a[71:64]}},
+        {8{|fu_data_i.operand_a[63:56]}},
+        {8{|fu_data_i.operand_a[55:48]}},
+        {8{|fu_data_i.operand_a[47:40]}},
+        {8{|fu_data_i.operand_a[39:32]}},
+        orcbw
+      };
+      assign rev8w_result = {
+        rev8w,
+        {fu_data_i.operand_a[39:32]},
+        {fu_data_i.operand_a[47:40]},
+        {fu_data_i.operand_a[55:48]},
+        {fu_data_i.operand_a[63:56]},
+        {fu_data_i.operand_a[71:64]},
+        {fu_data_i.operand_a[79:72]},
+        {fu_data_i.operand_a[87:80]},
+        {fu_data_i.operand_a[95:88]},
+        {fu_data_i.operand_a[103:96]},
+        {fu_data_i.operand_a[111:104]},
+        {fu_data_i.operand_a[119:112]},
+        {fu_data_i.operand_a[127:120]}
+      };
+    end
     if (CVA6Cfg.IS_XLEN64) begin : gen_64b
       assign orcbw_result = {
         {8{|operand_a[63:56]}},
@@ -300,7 +345,20 @@ module alu
   // -----------
   always_comb begin
     result_o = '0;
-    if (CVA6Cfg.IS_XLEN64) begin
+    if (CVA6Cfg.IS_XLEN128) begin
+      unique case (fu_data_i.operation)
+        // Add word: Ignore the upper bits and sign extend to 128 bit
+        ADDW, SUBW: result_o = {{CVA6Cfg.XLEN - 32{adder_result[31]}}, adder_result[31:0]};
+        ADDD, SUBD: result_o = {{CVA6Cfg.XLEN - 64{adder_result[63]}}, adder_result[63:0]};
+        SH1ADDUW, SH2ADDUW, SH3ADDUW: result_o = adder_result;
+        // Shifts 32 bit
+        SLLW, SRLW, SRAW:
+        result_o = {{CVA6Cfg.XLEN - 32{shift_result32[31]}}, shift_result32[31:0]};
+        SLLD, SRLD, SRAD:
+        result_o = {{CVA6Cfg.XLEN - 64{shift_result64[63]}}, shift_result64[63:0]};
+        default: ;
+      endcase
+    end else if (CVA6Cfg.IS_XLEN64) begin
       unique case (fu_data_i.operation)
         // Add word: Ignore the upper bits and sign extend to 64 bit
         ADDW, SUBW: result_o = {{CVA6Cfg.XLEN - 32{adder_result[31]}}, adder_result[31:0]};
@@ -319,7 +377,8 @@ module alu
       // Adder Operations
       ADD, SUB, ADDUW, SH1ADD, SH2ADD, SH3ADD: result_o = adder_result;
       // Shift Operations
-      SLL, SRL, SRA: result_o = CVA6Cfg.IS_XLEN64 ? shift_result : shift_result32;
+      SLL, SRL, SRA:
+      result_o = (CVA6Cfg.IS_XLEN128) ? shift_result : (CVA6Cfg.IS_XLEN64) ? shift_result64 : shift_result32;
       // Comparison Operations
       SLTS, SLTU: result_o = {{CVA6Cfg.XLEN - 1{1'b0}}, less};
       default: ;  // default case to suppress unique warning
