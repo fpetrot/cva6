@@ -128,19 +128,19 @@ module cva6_hpdcache_if_adapter
          //  {{{
     else begin : store_amo_gen
       //  STORE/AMO request
-      logic                 [63:0] amo_addr;
-      hpdcache_req_offset_t        amo_addr_offset;
-      hpdcache_tag_t               amo_tag;
+      logic                 [137:0] amo_addr;
+      hpdcache_req_offset_t         amo_addr_offset;
+      hpdcache_tag_t                amo_tag;
       logic amo_is_word, amo_is_word_hi;
-      logic                           [63:0] amo_data;
-      logic                           [ 7:0] amo_data_be;
-      hpdcache_pkg::hpdcache_req_op_t        amo_op;
-      logic                           [31:0] amo_resp_word;
-      logic                                  amo_pending_q;
+      logic                           [127:0] amo_data;
+      logic                           [  7:0] amo_data_be;
+      hpdcache_pkg::hpdcache_req_op_t         amo_op;
+      logic                           [ 31:0] amo_resp_word;
+      logic                                   amo_pending_q;
 
-      hpdcache_req_t                         hpdcache_req_amo;
-      hpdcache_req_t                         hpdcache_req_store;
-      hpdcache_req_t                         hpdcache_req_flush;
+      hpdcache_req_t                          hpdcache_req_amo;
+      hpdcache_req_t                          hpdcache_req_store;
+      hpdcache_req_t                          hpdcache_req_flush;
 
       flush_fsm_t flush_fsm_q, flush_fsm_d;
 
@@ -231,7 +231,7 @@ module cva6_hpdcache_if_adapter
       assign hpdcache_req_is_uncacheable = !config_pkg::is_inside_cacheable_regions(
           CVA6Cfg,
           {
-            {64 - CVA6Cfg.DCACHE_TAG_WIDTH{1'b0}}
+            {128 - CVA6Cfg.DCACHE_TAG_WIDTH{1'b0}}
             , hpdcache_req.addr_tag,
             {CVA6Cfg.DCACHE_INDEX_WIDTH{1'b0}}
           }
@@ -239,7 +239,11 @@ module cva6_hpdcache_if_adapter
 
       assign amo_is_word = (cva6_amo_req_i.size == 2'b10);
       assign amo_is_word_hi = cva6_amo_req_i.operand_a[2];
-      if (CVA6Cfg.IS_XLEN64) begin : amo_data_64_gen
+      if (CVA6Cfg.XLEN == 128) begin : amo_data_128_gen
+        assign amo_data    = amo_is_word ? {4{cva6_amo_req_i.operand_b[0+:32]}} : cva6_amo_req_i.operand_b;
+        assign amo_data_be = amo_is_word ? (cva6_amo_req_i.operand_a[3] ? (amo_is_word_hi ? 16'h8000 : 16'h4000) : (amo_is_word_hi ? 16'h2000 : 16'h1000))
+                                         : (cva6_amo_req_i.size == 2'b11 ? (cva6_amo_req_i.operand_a[3] ? 16'hff00 : 16'h00ff) : 16'hffff);
+      end else if (CVA6Cfg.IS_XLEN64) begin : amo_data_64_gen
         assign amo_data    = amo_is_word ? {2{cva6_amo_req_i.operand_b[0+:32]}} : cva6_amo_req_i.operand_b;
         assign amo_data_be = amo_is_word_hi ? 8'hf0 : amo_is_word ? 8'h0f : 8'hff;
       end else begin : amo_data_32_gen
@@ -327,7 +331,11 @@ module cva6_hpdcache_if_adapter
       //  Response forwarding
       //  {{{
       ariane_pkg::amo_resp_t cva6_amo_resp;
-      if (CVA6Cfg.IS_XLEN64) begin : amo_resp_64_gen
+      if (CVA6Cfg.XLEN == 128) begin : amo_resp_128_gen
+        assign amo_resp_word = cva6_amo_req_i.operand_a[3]
+                             ? (amo_is_word_hi ? hpdcache_rsp_i.rdata[0][96 +: 32] : hpdcache_rsp_i.rdata[0][64 +: 32])
+                             : (amo_is_word_hi ? hpdcache_rsp_i.rdata[0][32 +: 32] : hpdcache_rsp_i.rdata[0][0  +: 32]);
+      end else if (CVA6Cfg.IS_XLEN64) begin : amo_resp_64_gen
         assign amo_resp_word = amo_is_word_hi
                              ? hpdcache_rsp_i.rdata[0][32 +: 32]
                              : hpdcache_rsp_i.rdata[0][0  +: 32];
@@ -341,7 +349,7 @@ module cva6_hpdcache_if_adapter
       assign cva6_req_o.data_gnt = hpdcache_req_ready_i;
 
       assign cva6_amo_resp.ack = hpdcache_rsp_valid_i && (hpdcache_rsp_i.tid == '1);
-      assign cva6_amo_resp.result = amo_is_word ? {{32{amo_resp_word[31]}}, amo_resp_word}
+      assign cva6_amo_resp.result = amo_is_word ? {{96{amo_resp_word[31]}}, amo_resp_word}
                                                 : hpdcache_rsp_i.rdata[0];
       //  }}}
 
