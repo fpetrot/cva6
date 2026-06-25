@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
 // Author: Maxime Colson - Thales
 // Date: 20/03/2025
-// Contributors: 
+// Contributors:
 // Darshak Sheladiya, SYSGO GmbH
 // Umberto Laghi, UNIBO
 
@@ -18,7 +18,7 @@
      logic [Cfg.XLEN-1:0] tval; \
      riscv::priv_lvl_t  priv; \
      logic [Cfg.NrCommitPorts-1:0][Cfg.XLEN-1:0] iaddr; \
-     logic [63:0] cycles; \
+     logic [127:0] cycles; \
   }
 
 `endif  // ITI_TYPES_SVH

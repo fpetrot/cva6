@@ -21,11 +21,11 @@ class ex_trace_item #(
 
     // contains a human readable form of the cause value
     string                  cause_s;
-    logic [63:0]            cause;
-    logic [63:0]            tval;
+    logic [127:0]            cause;
+    logic [127:0]            tval;
     logic [CVA6Cfg.VLEN-1:0] pc;
 
-    function new (logic [CVA6Cfg.VLEN-1:0] pc, logic [63:0] cause, logic [63:0] tval);
+    function new (logic [CVA6Cfg.VLEN-1:0] pc, logic [127:0] cause, logic [127:0] tval);
 
         this.cause = cause;
 

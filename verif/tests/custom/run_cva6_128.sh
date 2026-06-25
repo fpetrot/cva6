@@ -62,7 +62,7 @@ echo "Compile to ELF..."
 # set -x
 
 # Compile program the programme
-$RISCV/bin/riscv128-unknown-elf-gcc "$src0" \
+$RISCV_CC "$src0" \
     -I /cva6_128/verif/sim/dv/user_extension \
     -T/cva6_128/verif/sim/../../config/gen_from_riscv_config/linker/link.ld \
     "${srcA[@]}" \
@@ -82,7 +82,7 @@ echo "tohost address: $tohost_addr"
 # need to convert ELF to BIN with cva6.py option
         # --steps=gen,gcc_compile,iss_sim,iss_cmp \
 python3 cva6.py \
-        --target cv128 \
+        --target cv128a6_im_sv39_hpdcache \
         --hwconfig_opts="$DV_HWCONFIG_OPTS" \
         --iss="$DV_SIMULATORS" \
         --iss_yaml=cva6.yaml \

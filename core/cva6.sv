@@ -1783,7 +1783,7 @@ module cva6
   end
 
   for (genvar i = 0; i < CVA6Cfg.NrCommitPorts; ++i) begin
-    assign wdata_commit_id_padded[i] = {{(64 - CVA6Cfg.XLEN) {1'b0}}, wdata_commit_id[i]};
+    assign wdata_commit_id_padded[i] = {{(128 - CVA6Cfg.XLEN) {1'b0}}, wdata_commit_id[i]};
   end
 
   instr_tracer #(
