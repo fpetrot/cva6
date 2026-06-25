@@ -66,7 +66,7 @@ module pmp_data_if
 
   // check for execute flag on memory
   assign match_any_execute_region = config_pkg::is_inside_execute_regions(
-      CVA6Cfg, {{64 - CVA6Cfg.PLEN{1'b0}}, icache_areq_i.fetch_paddr}
+      CVA6Cfg, {{128 - CVA6Cfg.PLEN{1'b0}}, icache_areq_i.fetch_paddr}
   );
 
   // As the PMP check is combinatorial, pass the icache_areq directly if no

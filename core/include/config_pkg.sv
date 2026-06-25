@@ -61,145 +61,145 @@ package config_pkg;
 
   typedef struct packed {
     // General Purpose Register Size (in bits)
-    int unsigned                 XLEN;
+    int unsigned                  XLEN;
     // Virtual address Size (in bits)
-    int unsigned                 VLEN;
+    int unsigned                  VLEN;
     // Atomic RISC-V extension
-    bit                          RVA;
+    bit                           RVA;
     // Bit manipulation RISC-V extension
-    bit                          RVB;
+    bit                           RVB;
     // Scalar Cryptography RISC-V extension
-    bit                          ZKN;
+    bit                           ZKN;
     // Vector RISC-V extension
-    bit                          RVV;
+    bit                           RVV;
     // Compress RISC-V extension
-    bit                          RVC;
+    bit                           RVC;
     // Hypervisor RISC-V extension
-    bit                          RVH;
+    bit                           RVH;
     // Zcb RISC-V extension
-    bit                          RVZCB;
+    bit                           RVZCB;
     // Zcmp RISC-V extension
-    bit                          RVZCMP;
+    bit                           RVZCMP;
     // Zcmt RISC-V extension
-    bit                          RVZCMT;
+    bit                           RVZCMT;
     // Zicond RISC-V extension
-    bit                          RVZiCond;
+    bit                           RVZiCond;
     // Zicbom RISC-V extension (cache management / CBO)
-    bit                          RVZiCbom;
+    bit                           RVZiCbom;
     // Zicntr RISC-V extension
-    bit                          RVZicntr;
+    bit                           RVZicntr;
     // Zihpm RISC-V extension
-    bit                          RVZihpm;
+    bit                           RVZihpm;
     // Floating Point
-    bit                          RVF;
+    bit                           RVF;
     // Floating Point
-    bit                          RVD;
+    bit                           RVD;
     // Non standard 16bits Floating Point extension
-    bit                          XF16;
+    bit                           XF16;
     // Non standard 16bits Floating Point Alt extension
-    bit                          XF16ALT;
+    bit                           XF16ALT;
     // Non standard 8bits Floating Point extension
-    bit                          XF8;
+    bit                           XF8;
     // Non standard Vector Floating Point extension
-    bit                          XFVec;
+    bit                           XFVec;
     // Perf counters
-    bit                          PerfCounterEn;
+    bit                           PerfCounterEn;
     // MMU
-    bit                          MmuPresent;
+    bit                           MmuPresent;
     // Supervisor mode
-    bit                          RVS;
+    bit                           RVS;
     // User mode
-    bit                          RVU;
+    bit                           RVU;
     // Software interrupts are enabled
-    bit                          SoftwareInterruptEn;
+    bit                           SoftwareInterruptEn;
     // Debug support
-    bit                          DebugEn;
+    bit                           DebugEn;
     // Base address of the debug module
-    logic [63:0]                 DmBaseAddress;
+    logic [127:0]                 DmBaseAddress;
     // Address to jump when halt request
-    logic [63:0]                 HaltAddress;
+    logic [127:0]                 HaltAddress;
     // Address to jump when exception
-    logic [63:0]                 ExceptionAddress;
+    logic [127:0]                 ExceptionAddress;
     // Trigger Module Sdtrig Extension
-    bit                          SDTRIG;
-    bit                          Mcontrol6;
-    bit                          Icount;
-    bit                          Etrigger;
-    bit                          Itrigger;
+    bit                           SDTRIG;
+    bit                           Mcontrol6;
+    bit                           Icount;
+    bit                           Etrigger;
+    bit                           Itrigger;
     // Tval Support Enable
-    bit                          TvalEn;
+    bit                           TvalEn;
     // MTVEC CSR supports only direct mode
-    bit                          DirectVecOnly;
+    bit                           DirectVecOnly;
     // PMP entries number
-    int unsigned                 NrPMPEntries;
+    int unsigned                  NrPMPEntries;
     // PMP CSR configuration reset values
-    logic [63:0][63:0]           PMPCfgRstVal;
+    logic [127:0][127:0]          PMPCfgRstVal;
     // PMP CSR address reset values
-    logic [63:0][63:0]           PMPAddrRstVal;
+    logic [127:0][127:0]          PMPAddrRstVal;
     // PMP CSR read-only bits
-    bit [63:0]                   PMPEntryReadOnly;
+    bit [127:0]                   PMPEntryReadOnly;
     // PMP NA4 and NAPOT mode enable
-    bit                          PMPNapotEn;
+    bit                           PMPNapotEn;
     // PMA non idempotent rules number
-    int unsigned                 NrNonIdempotentRules;
+    int unsigned                  NrNonIdempotentRules;
     // PMA NonIdempotent region base address
-    logic [NrMaxRules-1:0][63:0] NonIdempotentAddrBase;
+    logic [NrMaxRules-1:0][127:0] NonIdempotentAddrBase;
     // PMA NonIdempotent region length
-    logic [NrMaxRules-1:0][63:0] NonIdempotentLength;
+    logic [NrMaxRules-1:0][127:0] NonIdempotentLength;
     // PMA regions with execute rules number
-    int unsigned                 NrExecuteRegionRules;
+    int unsigned                  NrExecuteRegionRules;
     // PMA Execute region base address
-    logic [NrMaxRules-1:0][63:0] ExecuteRegionAddrBase;
+    logic [NrMaxRules-1:0][127:0] ExecuteRegionAddrBase;
     // PMA Execute region address base
-    logic [NrMaxRules-1:0][63:0] ExecuteRegionLength;
+    logic [NrMaxRules-1:0][127:0] ExecuteRegionLength;
     // PMA regions with cache rules number
-    int unsigned                 NrCachedRegionRules;
+    int unsigned                  NrCachedRegionRules;
     // PMA cache region base address
-    logic [NrMaxRules-1:0][63:0] CachedRegionAddrBase;
+    logic [NrMaxRules-1:0][127:0] CachedRegionAddrBase;
     // PMA cache region rules
-    logic [NrMaxRules-1:0][63:0] CachedRegionLength;
+    logic [NrMaxRules-1:0][127:0] CachedRegionLength;
     // CV-X-IF coprocessor interface enable
-    bit                          CvxifEn;
+    bit                           CvxifEn;
     // Coprocessor type
-    copro_type_t                 CoproType;
+    copro_type_t                  CoproType;
     // NOC bus type
-    noc_type_e                   NOCType;
+    noc_type_e                    NOCType;
     // AXI address width
-    int unsigned                 AxiAddrWidth;
+    int unsigned                  AxiAddrWidth;
     // AXI data width
-    int unsigned                 AxiDataWidth;
+    int unsigned                  AxiDataWidth;
     // AXI ID width
-    int unsigned                 AxiIdWidth;
+    int unsigned                  AxiIdWidth;
     // AXI User width
-    int unsigned                 AxiUserWidth;
+    int unsigned                  AxiUserWidth;
     // AXI burst in write
-    bit                          AxiBurstWriteEn;
+    bit                           AxiBurstWriteEn;
     // TODO
-    int unsigned                 MemTidWidth;
+    int unsigned                  MemTidWidth;
     // Instruction cache size (in bytes)
-    int unsigned                 IcacheByteSize;
+    int unsigned                  IcacheByteSize;
     // Instruction cache associativity (number of ways)
-    int unsigned                 IcacheSetAssoc;
+    int unsigned                  IcacheSetAssoc;
     // Instruction cache line width
-    int unsigned                 IcacheLineWidth;
+    int unsigned                  IcacheLineWidth;
     // Cache Type
-    cache_type_t                 DCacheType;
+    cache_type_t                  DCacheType;
     // Data cache ID
-    int unsigned                 DcacheIdWidth;
+    int unsigned                  DcacheIdWidth;
     // Data cache size (in bytes)
-    int unsigned                 DcacheByteSize;
+    int unsigned                  DcacheByteSize;
     // Data cache associativity (number of ways)
-    int unsigned                 DcacheSetAssoc;
+    int unsigned                  DcacheSetAssoc;
     // Data cache line width
-    int unsigned                 DcacheLineWidth;
+    int unsigned                  DcacheLineWidth;
     // three configurations for cache coherency after flush:
     // DcacheFlushOnFence causes dcache flush for every fence instruction
     // DcacheFlushOnFenceI causes dcache flush for every fence.I instruction
     // DcacheInvalidateOnFlush causes dcache to also be invalidated when flushed
     // tradeoff between coherence and efficiency, depending on remaining configuration:
 
-    // DcacheFlushOnFenceI is required for write-back caches - otherwise, 
-    // no way to reliably write instruction memory with store instructions, 
+    // DcacheFlushOnFenceI is required for write-back caches - otherwise,
+    // no way to reliably write instruction memory with store instructions,
     // as data and instruction cache are currently not coherent
     // DcacheFlushOnFence is required for write-back caches to ensure coherency
     // with other harts or DMA devices --> a fence forces all stores to commit to memory
@@ -339,8 +339,8 @@ package config_pkg;
     bit          RVU;                  //User mode
     bit          SoftwareInterruptEn;
 
-    logic [63:0] HaltAddress;
-    logic [63:0] ExceptionAddress;
+    logic [127:0] HaltAddress;
+    logic [127:0] ExceptionAddress;
     int unsigned RASDepth;
     int unsigned BTBEntries;
     bp_type_t    BPType;
@@ -354,24 +354,24 @@ package config_pkg;
     int unsigned VpnLen;
     int unsigned PtLevels;
 
-    logic [63:0]                 DmBaseAddress;
+    logic [127:0]                DmBaseAddress;
     bit                          TvalEn;
     bit                          DirectVecOnly;
     int unsigned                 NrPMPEntries;
-    logic [63:0][63:0]           PMPCfgRstVal;
-    logic [63:0][63:0]           PMPAddrRstVal;
-    bit [63:0]                   PMPEntryReadOnly;
+    logic [127:0][127:0]         PMPCfgRstVal;
+    logic [127:0][127:0]         PMPAddrRstVal;
+    bit [127:0]                   PMPEntryReadOnly;
     bit                          PMPNapotEn;
     noc_type_e                   NOCType;
     int unsigned                 NrNonIdempotentRules;
-    logic [NrMaxRules-1:0][63:0] NonIdempotentAddrBase;
-    logic [NrMaxRules-1:0][63:0] NonIdempotentLength;
+    logic [NrMaxRules-1:0][127:0] NonIdempotentAddrBase;
+    logic [NrMaxRules-1:0][127:0] NonIdempotentLength;
     int unsigned                 NrExecuteRegionRules;
-    logic [NrMaxRules-1:0][63:0] ExecuteRegionAddrBase;
-    logic [NrMaxRules-1:0][63:0] ExecuteRegionLength;
+    logic [NrMaxRules-1:0][127:0] ExecuteRegionAddrBase;
+    logic [NrMaxRules-1:0][127:0] ExecuteRegionLength;
     int unsigned                 NrCachedRegionRules;
-    logic [NrMaxRules-1:0][63:0] CachedRegionAddrBase;
-    logic [NrMaxRules-1:0][63:0] CachedRegionLength;
+    logic [NrMaxRules-1:0][127:0] CachedRegionAddrBase;
+    logic [NrMaxRules-1:0][127:0] CachedRegionLength;
     int unsigned                 MaxOutstandingStores;
     bit                          DebugEn;
     bit                          SDTRIG;
@@ -463,14 +463,14 @@ package config_pkg;
     // pragma translate_on
   endfunction
 
-  function automatic logic range_check(logic [63:0] base, logic [63:0] len, logic [63:0] address);
+  function automatic logic range_check(logic [127:0] base, logic [127:0] len, logic [127:0] address);
     // if len is a power of two, and base is properly aligned, this check could be simplified
     // Extend base by one bit to prevent an overflow.
-    return (address >= base) && (({1'b0, address}) < (65'(base) + len));
+    return (address >= base) && (({1'b0, address}) < (129'(base) + len));
   endfunction : range_check
 
 
-  function automatic logic is_inside_nonidempotent_regions(cva6_cfg_t Cfg, logic [63:0] address);
+  function automatic logic is_inside_nonidempotent_regions(cva6_cfg_t Cfg, logic [127:0] address);
     logic [NrMaxRules-1:0] pass;
     pass = '0;
     for (int unsigned k = 0; k < Cfg.NrNonIdempotentRules; k++) begin
@@ -479,7 +479,7 @@ package config_pkg;
     return |pass;
   endfunction : is_inside_nonidempotent_regions
 
-  function automatic logic is_inside_execute_regions(cva6_cfg_t Cfg, logic [63:0] address);
+  function automatic logic is_inside_execute_regions(cva6_cfg_t Cfg, logic [127:0] address);
     // if we don't specify any region we assume everything is accessible
     logic [NrMaxRules-1:0] pass;
     if (Cfg.NrExecuteRegionRules != 0) begin
@@ -493,7 +493,7 @@ package config_pkg;
     end
   endfunction : is_inside_execute_regions
 
-  function automatic logic is_inside_cacheable_regions(cva6_cfg_t Cfg, logic [63:0] address);
+  function automatic logic is_inside_cacheable_regions(cva6_cfg_t Cfg, logic [127:0] address);
     automatic logic [NrMaxRules-1:0] pass;
     pass = '0;
     for (int unsigned k = 0; k < Cfg.NrCachedRegionRules; k++) begin

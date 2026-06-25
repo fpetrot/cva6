@@ -81,7 +81,7 @@ module cva6_hpdcache_if_adapter
       assign hpdcache_req_is_uncacheable = !config_pkg::is_inside_cacheable_regions(
           CVA6Cfg,
           {
-            {64 - CVA6Cfg.DCACHE_TAG_WIDTH{1'b0}}
+            {128 - CVA6Cfg.DCACHE_TAG_WIDTH{1'b0}}
             , cva6_req_i.address_tag
             , {CVA6Cfg.DCACHE_INDEX_WIDTH{1'b0}}
           }
