@@ -10,6 +10,8 @@
 package cva6_config_pkg;
 
   localparam CVA6ConfigXlen = 128;
+  localparam CVA6ConfigVlen = 128;
+
 
   localparam CVA6ConfigRVF = 0;
   localparam CVA6ConfigRVD = 0;
@@ -76,7 +78,7 @@ package cva6_config_pkg;
 
   localparam config_pkg::cva6_user_cfg_t cva6_cfg = '{
       XLEN: unsigned'(CVA6ConfigXlen),
-      VLEN: unsigned'(64),
+      VLEN: unsigned'(CVA6ConfigVlen),
       FpgaEn: bit'(0),  // for Xilinx and Altera
       FpgaAlteraEn: bit'(0),  // for Altera (only)
       TechnoCut: bit'(0),
