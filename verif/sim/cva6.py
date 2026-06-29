@@ -887,8 +887,8 @@ def load_config(args, cwd):
     else:
       base = args.target
     if base == "cv128a6_im_sv39_hpdcache":
-      args.mabi = "llp128d"
-      args.isa = "rv128gc_zba_zbb_zbs_zbc"
+      args.mabi = "llp128"
+      args.isa = "rv128im"
     elif base in ("cv64a6_imafdch_sv39", "cv64a6_imafdch_sv39_wb"):
       args.mabi = "lp64d"
       args.isa  = "rv64gch_zba_zbb_zbs_zbc"
