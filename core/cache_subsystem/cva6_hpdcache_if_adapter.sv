@@ -239,7 +239,7 @@ module cva6_hpdcache_if_adapter
 
       assign amo_is_word = (cva6_amo_req_i.size == 2'b10);
       assign amo_is_word_hi = cva6_amo_req_i.operand_a[2];
-      if (CVA6Cfg.XLEN == 128) begin : amo_data_128_gen
+      if (CVA6Cfg.IS_XLEN128) begin : amo_data_128_gen
         assign amo_data    = amo_is_word ? {4{cva6_amo_req_i.operand_b[0+:32]}} : cva6_amo_req_i.operand_b;
         assign amo_data_be = amo_is_word ? (cva6_amo_req_i.operand_a[3] ? (amo_is_word_hi ? 16'h8000 : 16'h4000) : (amo_is_word_hi ? 16'h2000 : 16'h1000))
                                          : (cva6_amo_req_i.size == 2'b11 ? (cva6_amo_req_i.operand_a[3] ? 16'hff00 : 16'h00ff) : 16'hffff);
@@ -331,7 +331,7 @@ module cva6_hpdcache_if_adapter
       //  Response forwarding
       //  {{{
       ariane_pkg::amo_resp_t cva6_amo_resp;
-      if (CVA6Cfg.XLEN == 128) begin : amo_resp_128_gen
+      if (CVA6Cfg.IS_XLEN128) begin : amo_resp_128_gen
         assign amo_resp_word = cva6_amo_req_i.operand_a[3]
                              ? (amo_is_word_hi ? hpdcache_rsp_i.rdata[0][96 +: 32] : hpdcache_rsp_i.rdata[0][64 +: 32])
                              : (amo_is_word_hi ? hpdcache_rsp_i.rdata[0][32 +: 32] : hpdcache_rsp_i.rdata[0][0  +: 32]);
