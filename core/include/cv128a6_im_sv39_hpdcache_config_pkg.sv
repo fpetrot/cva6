@@ -139,7 +139,7 @@ package cva6_config_pkg;
       NonIdempotentLength: 2048'({128'b0, 128'b0}),
       NrExecuteRegionRules: unsigned'(3),
       ExecuteRegionAddrBase: 2048'({128'h8000_0000, 128'h1_0000, 128'h0}),
-      ExecuteRegionLength: 2048'({128'h40000000, 128'h10000, 64'h1000}),
+      ExecuteRegionLength: 2048'({128'h40000000, 128'h10000, 128'h1000}),
       NrCachedRegionRules: unsigned'(1),
       CachedRegionAddrBase: 2048'({128'h8000_0000}),
       CachedRegionLength: 2048'({128'h40000000}),

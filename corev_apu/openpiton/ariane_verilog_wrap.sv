@@ -25,8 +25,8 @@ module ariane_verilog_wrap
   parameter int unsigned               NrRgprPorts           = 0,
   parameter int unsigned               NrWbPorts             = 0,
   parameter int unsigned               MaxOutstandingStores  = 7,
-  parameter logic [63:0]               HaltAddress           = 64'h800,
-  parameter logic [63:0]               ExceptionAddress      = 64'h808,
+  parameter logic [127:0]               HaltAddress           = 128'h800,
+  parameter logic [127:0]               ExceptionAddress      = 128'h808,
   parameter bit                        EnableAccelerator     = 0,
   parameter bit                        SupervisorModeEn      = 1,
   parameter bit                        TvalEn                = 1,
@@ -68,7 +68,7 @@ module ariane_verilog_wrap
   parameter bit                        XF8VecEn              = 0,
   parameter bit                        PerfCounterEn         = 0,
   // debug module base address
-  parameter logic [63:0]               DmBaseAddress         = 64'h0,
+  parameter logic [127:0]               DmBaseAddress         = 128'h0,
   // swap endianness in l15 adapter
   parameter bit                        SwapEndianess         = 1,
   // AXI Configuration
@@ -78,16 +78,16 @@ module ariane_verilog_wrap
   // PMA configuration
   // idempotent region
   parameter int unsigned               NrNonIdempotentRules  =  1,
-  parameter logic [NrMaxRules*64-1:0]  NonIdempotentAddrBase = 64'h00C0000000,
-  parameter logic [NrMaxRules*64-1:0]  NonIdempotentLength   = 64'hFFFFFFFFFF,
+  parameter logic [NrMaxRules*128-1:0]  NonIdempotentAddrBase = 128'h00C0000000,
+  parameter logic [NrMaxRules*128-1:0]  NonIdempotentLength   = 128'hFFFFFFFFFF,
   // executable regions
   parameter int unsigned               NrExecuteRegionRules  =  0,
-  parameter logic [NrMaxRules*64-1:0]  ExecuteRegionAddrBase = '0,
-  parameter logic [NrMaxRules*64-1:0]  ExecuteRegionLength   = '0,
+  parameter logic [NrMaxRules*128-1:0]  ExecuteRegionAddrBase = '0,
+  parameter logic [NrMaxRules*128-1:0]  ExecuteRegionLength   = '0,
   // cacheable regions
   parameter int unsigned               NrCachedRegionRules   =  0,
-  parameter logic [NrMaxRules*64-1:0]  CachedRegionAddrBase  = '0,
-  parameter logic [NrMaxRules*64-1:0]  CachedRegionLength    = '0,
+  parameter logic [NrMaxRules*128-1:0]  CachedRegionAddrBase  = '0,
+  parameter logic [NrMaxRules*128-1:0]  CachedRegionLength    = '0,
   // PMP
   parameter int unsigned               NrPMPEntries          =  8,
   // HPDC Write coalescing
