@@ -8,6 +8,7 @@
 
 
 #include "bootrom_time.h"
+#include "bootrom_types.h"
 #include "uart.h"
 #include "dwmmc.h"
 #include "cache.h"
@@ -74,9 +75,9 @@ static void dwmci_set_idma_desc(struct dwmci_idmac *idmac,
 	desc->flags = desc0;
 	desc->cnt = desc1;
 	desc->addr = desc2;
-	desc->next_addr = (unsigned long)desc + sizeof(struct dwmci_idmac);
+	desc->next_addr = (uptr_t)desc + sizeof(struct dwmci_idmac);
 	print_uart("descriptor pointer address: ");
-	print_uart_int(desc);
+	print_uart_int((u32_t)desc);
 	print_uart("set descriptor: flags ");
 	print_uart_int(desc->flags);
 	print_uart(" cnt ");

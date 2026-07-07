@@ -54,7 +54,7 @@ void invalidate_icache_all(void);
 static inline dma_addr_t dma_map_single(void *vaddr, size_t len,
 					enum dma_data_direction dir)
 {
-	unsigned long addr = (unsigned long)vaddr;
+	uptr_t addr = (uptr_t)vaddr;
 
 	len = ALIGN(len, ARCH_DMA_MINALIGN);
 
