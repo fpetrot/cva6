@@ -50,7 +50,7 @@ int main()
 
     #ifndef PLAT_AGILEX
     init_uart(CLOCK_FREQUENCY, UART_BITRATE); //not needed in intel setup as UART IP is already configured via HW
-    #endif 
+    #endif
     print_uart("Hello World!\r\n");
 
     // See if we should enter update mode
@@ -73,8 +73,8 @@ int main()
     } else {
         print_uart(" booting!\r\n");
         #ifndef PLAT_AGILEX
-        res = gpt_find_boot_partition((uint8_t *)0x80000000UL, 2 * 16384); 
-        #else 
+        res = gpt_find_boot_partition((uint8_t *)0x80000000UL, 2 * 16384);
+        #else
             int start_block_fw_payload  = 0x32800; //payload at 100MB
             print_uart("I am Agilex 7! \r\n");
 
@@ -88,7 +88,7 @@ int main()
                     return res;
                 }
 		    }
-        #endif 
+        #endif
     }
 
     if (res == 0)
