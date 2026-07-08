@@ -331,11 +331,7 @@ module cva6_hpdcache_if_adapter
       //  Response forwarding
       //  {{{
       ariane_pkg::amo_resp_t cva6_amo_resp;
-      if (CVA6Cfg.IS_XLEN128) begin : amo_resp_128_gen
-        assign amo_resp_word = cva6_amo_req_i.operand_a[3]
-                             ? (amo_is_word_hi ? hpdcache_rsp_i.rdata[0][96 +: 32] : hpdcache_rsp_i.rdata[0][64 +: 32])
-                             : (amo_is_word_hi ? hpdcache_rsp_i.rdata[0][32 +: 32] : hpdcache_rsp_i.rdata[0][0  +: 32]);
-      end else if (CVA6Cfg.IS_XLEN64) begin : amo_resp_64_gen
+      if (CVA6Cfg.IS_XLEN64 || CVA6Cfg.IS_XLEN128) begin : amo_resp_64_128_gen
         assign amo_resp_word = amo_is_word_hi
                              ? hpdcache_rsp_i.rdata[0][32 +: 32]
                              : hpdcache_rsp_i.rdata[0][0  +: 32];
