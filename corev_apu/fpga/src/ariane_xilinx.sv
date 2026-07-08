@@ -429,7 +429,7 @@ logic [CVA6Cfg.XLEN-1:0]    dm_master_r_rdata;
 // debug module
 dm_top #(
     .NrHarts          ( 1                 ),
-    .BusWidth         ( __minu(64, CVA6Cfg.XLEN) ),
+    .BusWidth         ( CVA6Cfg.IS_XLEN128 ? 64 : CVA6Cfg.XLEN ),
     .SelectableHarts  ( 1'b1              )
 ) i_dm_top (
     .clk_i            ( clk               ),
@@ -729,7 +729,7 @@ assign axi_adapter_size = CVA6Cfg.IS_XLEN64 ? 2'b11 : 2'b10;
 
 axi_adapter #(
     .CVA6Cfg               ( CVA6Cfg                  ),
-    .DATA_WIDTH            ( __minu(64, CVA6Cfg.XLEN) ),
+    .DATA_WIDTH            ( CVA6Cfg.IS_XLEN128 ? 64 : CVA6Cfg.XLEN ),
     .axi_req_t             ( ariane_axi::req_t        ),
     .axi_rsp_t             ( ariane_axi::resp_t       )
 ) i_dm_axi_master (
