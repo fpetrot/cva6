@@ -82,7 +82,7 @@ echo "tohost address: $tohost_addr"
 # need to convert ELF to BIN with cva6.py option
         # --steps=gen,gcc_compile,iss_sim,iss_cmp \
 python3 cva6.py \
-        --target cv128a6_im_sv39_hpdcache \
+        --target cv128a6_im_sv39_hpdcache_wb \
         --hwconfig_opts="$DV_HWCONFIG_OPTS" \
         --iss="$DV_SIMULATORS" \
         --iss_yaml=cva6.yaml \

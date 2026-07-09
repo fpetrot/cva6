@@ -4,7 +4,7 @@
 //
 // Authors       : Vincent Verdillon
 // Creation Date : June, 2026
-// Description   : CVA6 configuration to run in 128 bits mode with HPDcache WT.
+// Description   : CVA6 configuration to run in 128 bits mode with HPDcache WB.
 // History       :
 
 package cva6_config_pkg;
@@ -52,7 +52,7 @@ package cva6_config_pkg;
   localparam CVA6ConfigDcacheIdWidth = 3;
   localparam CVA6ConfigMemTidWidth = CVA6ConfigAxiIdWidth;
 
-  localparam CVA6ConfigWtDcacheWbufDepth = 16;
+  localparam CVA6ConfigWtDcacheWbufDepth = 7;
 
   localparam CVA6ConfigNrScoreboardEntries = 16;
 
@@ -70,7 +70,7 @@ package cva6_config_pkg;
 
   localparam CVA6ConfigPerfCounterEn = 1;
 
-  localparam config_pkg::cache_type_t CVA6ConfigDcacheType = config_pkg::HPDCACHE_WT;
+  localparam config_pkg::cache_type_t CVA6ConfigDcacheType = config_pkg::HPDCACHE_WB;
 
   localparam CVA6ConfigMmuPresent = 1;
 
