@@ -886,9 +886,9 @@ def load_config(args, cwd):
       os.system("cp ../../config/gen_from_riscv_config/%s/linker/*.ld ../../config/gen_from_riscv_config/hwconfig/linker/" % (base))
     else:
       base = args.target
-    if base == "cv128a6_im_sv39_hpdcache":
-      args.mabi = "llp128d"
-      args.isa = "rv128gc_zba_zbb_zbs_zbc"
+    if base in ("cv128a6_im_sv39_hpdcache", "cv128a6_im_sv39_hpdcache_wb"):
+      args.mabi = "llp128"
+      args.isa = "rv128im"
     elif base in ("cv64a6_imafdch_sv39", "cv64a6_imafdch_sv39_wb"):
       args.mabi = "lp64d"
       args.isa  = "rv64gch_zba_zbb_zbs_zbc"

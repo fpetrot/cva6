@@ -39,7 +39,7 @@ module sram #(
 );
 
 localparam DATA_WIDTH_ALIGNED = ((DATA_WIDTH+63)/64)*64;
-localparam USER_WIDTH_ALIGNED = DATA_WIDTH_ALIGNED; // To be fine tuned to reduce memory size
+localparam USER_WIDTH_ALIGNED = ((USER_WIDTH+63)/64)*64; // To be fine tuned to reduce memory size
 localparam BE_WIDTH_ALIGNED   = (((DATA_WIDTH+7)/8+7)/8)*8;
 
 logic [DATA_WIDTH_ALIGNED-1:0]  wdata_aligned;
