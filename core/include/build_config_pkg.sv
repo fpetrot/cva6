@@ -34,8 +34,8 @@ package build_config_pkg;
 
     cfg.XLEN = CVA6Cfg.XLEN;
     cfg.VLEN = CVA6Cfg.VLEN;
-    cfg.PLEN = IS_XLEN128 ? 128 : (CVA6Cfg.XLEN == 64) ? 56 : 34;
-    cfg.GPLEN = IS_XLEN128 ? 128 : (CVA6Cfg.XLEN == 64) ? 41 : 34;
+    cfg.PLEN = IS_XLEN128 ? 128 : (IS_XLEN64) ? 56 : 34;
+    cfg.GPLEN = IS_XLEN128 ? 128 : (IS_XLEN64) ? 41 : 34;
     cfg.IS_XLEN32 = IS_XLEN32;
     cfg.IS_XLEN64 = IS_XLEN64;
     cfg.IS_XLEN128 = IS_XLEN128;
