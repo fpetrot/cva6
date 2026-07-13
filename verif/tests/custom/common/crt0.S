@@ -64,7 +64,7 @@ _start:
   bltz t0, 1f
 #elif __riscv_xlen == 64
   slli t0, t0, 63
-  bltz t8, 1f
+  bltz t0, 1f
 #else
   # 128 bits case
   slli t0, t0, 127
