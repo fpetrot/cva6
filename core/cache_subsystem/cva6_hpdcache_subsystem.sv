@@ -190,7 +190,7 @@ module cva6_hpdcache_subsystem
     userCfg.sets = CVA6Cfg.DCACHE_NUM_WORDS;
     userCfg.ways = CVA6Cfg.DCACHE_SET_ASSOC;
     userCfg.clWords = CVA6Cfg.DCACHE_LINE_WIDTH / userCfg.wordWidth;
-    userCfg.reqWords = 1;
+    userCfg.reqWords = __maxu(1, CVA6Cfg.XLEN / 64);
     userCfg.reqTransIdWidth = CVA6Cfg.DcacheIdWidth;
     userCfg.reqSrcIdWidth = 3;  // Up to 8 requesters
     userCfg.victimSel = hpdcache_pkg::HPDCACHE_VICTIM_RANDOM;
