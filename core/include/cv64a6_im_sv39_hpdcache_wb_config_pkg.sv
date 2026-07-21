@@ -1,17 +1,23 @@
-// Copyright 2026 Univ. Grenoble Alpes, Inria, TIMA Laboratory
+// Copyright 2021 Thales DIS design services SAS
 //
-// SPDX-License-Identifier: Apaches-2.0 WITH SHL-2.1
+// Licensed under the Solderpad Hardware Licence, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// SPDX-License-Identifier: Apache-2.0 WITH SHL-2.0
+// You may obtain a copy of the License at https://solderpad.org/licenses/
 //
-// Authors       : Vincent Verdillon
-// Creation Date : June, 2026
-// Description   : CVA6 configuration to run in 128 bits mode with HPDcache WB.
-// History       :
+// Original Author: Jean-Roch COULON - Thales
+//
+// Copyright 2023 Commissariat a l'Energie Atomique et aux Energies
+//                Alternatives (CEA)
+//
+// Author: Cesar Fuguet - CEA
+// Date: August, 2023
+// Description: CVA6 configuration package using the HPDcache as cache subsystem
+
 
 package cva6_config_pkg;
 
-  localparam CVA6ConfigXlen = 128;
-  localparam CVA6ConfigVlen = 128;
-
+  localparam CVA6ConfigXlen = 64;
 
   localparam CVA6ConfigRVF = 0;
   localparam CVA6ConfigRVD = 0;
@@ -31,7 +37,7 @@ package cva6_config_pkg;
   localparam CVA6ConfigRVZiCond = 1;
 
   localparam CVA6ConfigAxiIdWidth = 4;
-  localparam CVA6ConfigAxiAddrWidth = 128;
+  localparam CVA6ConfigAxiAddrWidth = 64;
   localparam CVA6ConfigAxiDataWidth = 64;
   localparam CVA6ConfigFetchUserEn = 0;
   localparam CVA6ConfigFetchUserWidth = CVA6ConfigXlen;
@@ -40,13 +46,15 @@ package cva6_config_pkg;
 
   localparam CVA6ConfigIcacheByteSize = 16384;
   localparam CVA6ConfigIcacheSetAssoc = 4;
-  localparam CVA6ConfigIcacheLineWidth = 256;
+  localparam CVA6ConfigIcacheLineWidth = 128;
   localparam CVA6ConfigDcacheByteSize = 32768;
   localparam CVA6ConfigDcacheSetAssoc = 8;
-  localparam CVA6ConfigDcacheLineWidth = 256;
-
+  localparam CVA6ConfigDcacheLineWidth = 128;
+  // do not flush Dcache for EVERY fence - dramatic performance impact
+  // use RVZiCbom to synchronize caches with DMA devices instead
+  // CAUTION - a configuration with CVA6ConfigDcacheFlushOnFence might be required for different SoCs, e.g., cache-coherent SMP configurations
   localparam CVA6ConfigDcacheFlushOnFence = 1'b0;
-  localparam CVA6ConfigDcacheFlushOnFenceI = 1'b0;
+  localparam CVA6ConfigDcacheFlushOnFenceI = 1'b1;
   localparam CVA6ConfigDcacheInvalidateOnFlush = 1'b0;
 
   localparam CVA6ConfigDcacheIdWidth = 3;
@@ -78,7 +86,7 @@ package cva6_config_pkg;
 
   localparam config_pkg::cva6_user_cfg_t cva6_cfg = '{
       XLEN: unsigned'(CVA6ConfigXlen),
-      VLEN: unsigned'(CVA6ConfigVlen),
+      VLEN: unsigned'(64),
       FpgaEn: bit'(0),  // for Xilinx and Altera
       FpgaAlteraEn: bit'(0),  // for Altera (only)
       TechnoCut: bit'(0),
@@ -118,20 +126,20 @@ package cva6_config_pkg;
       RVS: bit'(1),
       RVU: bit'(1),
       SoftwareInterruptEn: bit'(1),
-      HaltAddress: 128'h800,
-      ExceptionAddress: 128'h808,
+      HaltAddress: 64'h800,
+      ExceptionAddress: 64'h808,
       RASDepth: unsigned'(CVA6ConfigRASDepth),
       BTBEntries: unsigned'(CVA6ConfigBTBEntries),
       BPType: config_pkg::BHT,
       BHTEntries: unsigned'(CVA6ConfigBHTEntries),
       BHTHist: unsigned'(3),
-      DmBaseAddress: 128'h0,
+      DmBaseAddress: 64'h0,
       TvalEn: bit'(CVA6ConfigTvalEn),
       DirectVecOnly: bit'(0),
       NrPMPEntries: unsigned'(CVA6ConfigNrPMPEntries),
-      PMPCfgRstVal: {128{128'h0}},
-      PMPAddrRstVal: {128{128'h0}},
-      PMPEntryReadOnly: 128'd0,
+      PMPCfgRstVal: {64{64'h0}},
+      PMPAddrRstVal: {64{64'h0}},
+      PMPEntryReadOnly: 64'd0,
       PMPNapotEn: bit'(1),
       NOCType: config_pkg::NOC_TYPE_AXI4_ATOP,
       NrNonIdempotentRules: unsigned'(2),

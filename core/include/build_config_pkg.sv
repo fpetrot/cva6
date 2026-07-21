@@ -180,7 +180,7 @@ package build_config_pkg;
     cfg.ModeW = IS_XLEN32 ? 1 : 4;
     cfg.ASIDW = IS_XLEN32 ? 9 : 16;
     cfg.VMIDW = IS_XLEN32 ? 7 : 14;
-    cfg.PPNW = IS_XLEN32 ? 22 : 44;
+    cfg.PPNW = IS_XLEN128 ? 108 : IS_XLEN64 ? 44 : 22;
     cfg.GPPNW = IS_XLEN32 ? 22 : 29;
     cfg.MODE_SV = IS_XLEN32 ? config_pkg::ModeSv32 : config_pkg::ModeSv39;
     cfg.SV = (cfg.MODE_SV == config_pkg::ModeSv32) ? 32 : 39;
