@@ -1,6 +1,6 @@
 XLEN ?= 64
-CROSSCOMPILE ?= riscv-none-elf-
-# CROSSCOMPILE ?=riscv128-unknown-elf-
+# CROSSCOMPILE ?= riscv-none-elf-
+CROSSCOMPILE ?=riscv128-unknown-elf-
 
 ifeq ($(BOARD), nexys_video)
 DRAM_SIZE_128 ?= 0x20000000 #512MB
@@ -44,7 +44,7 @@ SED = sed
 PLATFORM_DEFINES = -DCLOCK_FREQUENCY=$(CLOCK_FREQUENCY) -DUART_BITRATE=$(UART_BITRATE) -D$(PLATFORM)  -DXLEN=$(XLEN)
 
 ifeq ($(XLEN), 128)
-CFLAGS = $(PLATFORM_DEFINES) -Os -ggdb -march=rv64im_zicsr -mabi=lp64 -Wall -mcmodel=medany -mexplicit-relocs -ffreestanding
+CFLAGS = $(PLATFORM_DEFINES) -Os -ggdb -march=rv128im_zicsr -mabi=llp128 -Wall -mcmodel=medany -mexplicit-relocs -ffreestanding
 else ifeq ($(XLEN), 64)
 CFLAGS = $(PLATFORM_DEFINES) -Os -ggdb -march=rv64im_zicsr -mabi=lp64 -Wall -mcmodel=medany -mexplicit-relocs -ffreestanding
 else

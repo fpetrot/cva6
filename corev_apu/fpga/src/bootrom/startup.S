@@ -24,7 +24,7 @@ _dtb:
 #if __riscv_xlen == 128
   .incbin "cv128a6.dtb"
 #elif __riscv_xlen == 64
-  .incbin "cv128a6.dtb"
+  .incbin "cv64a6.dtb"
 #else
   .incbin "cv32a6.dtb"
 #endif

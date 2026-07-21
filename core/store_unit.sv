@@ -109,22 +109,42 @@ module store_unit
       data_tmp[CVA6Cfg.XLEN-1:0] = {data[CVA6Cfg.XLEN-17:0], data[CVA6Cfg.XLEN-1:CVA6Cfg.XLEN-16]};
       4'b0011:
       data_tmp[CVA6Cfg.XLEN-1:0] = {data[CVA6Cfg.XLEN-25:0], data[CVA6Cfg.XLEN-1:CVA6Cfg.XLEN-24]};
-      4'b0100:
-      data_tmp[CVA6Cfg.XLEN-1:0] = {data[CVA6Cfg.XLEN-33:0], data[CVA6Cfg.XLEN-1:CVA6Cfg.XLEN-32]};
-      4'b0101:
-      data_tmp[CVA6Cfg.XLEN-1:0] = {data[CVA6Cfg.XLEN-41:0], data[CVA6Cfg.XLEN-1:CVA6Cfg.XLEN-40]};
-      4'b0110:
-      data_tmp[CVA6Cfg.XLEN-1:0] = {data[CVA6Cfg.XLEN-49:0], data[CVA6Cfg.XLEN-1:CVA6Cfg.XLEN-48]};
-      4'b0111:
-      data_tmp[CVA6Cfg.XLEN-1:0] = {data[CVA6Cfg.XLEN-57:0], data[CVA6Cfg.XLEN-1:CVA6Cfg.XLEN-56]};
-      4'b1000: data_tmp = {data[CVA6Cfg.XLEN-65:0], data[CVA6Cfg.XLEN-1:CVA6Cfg.XLEN-64]};
-      4'b1001: data_tmp = {data[CVA6Cfg.XLEN-73:0], data[CVA6Cfg.XLEN-1:CVA6Cfg.XLEN-72]};
-      4'b1010: data_tmp = {data[CVA6Cfg.XLEN-81:0], data[CVA6Cfg.XLEN-1:CVA6Cfg.XLEN-80]};
-      4'b1011: data_tmp = {data[CVA6Cfg.XLEN-89:0], data[CVA6Cfg.XLEN-1:CVA6Cfg.XLEN-88]};
-      4'b1100: data_tmp = {data[CVA6Cfg.XLEN-97:0], data[CVA6Cfg.XLEN-1:CVA6Cfg.XLEN-96]};
-      4'b1101: data_tmp = {data[CVA6Cfg.XLEN-105:0], data[CVA6Cfg.XLEN-1:CVA6Cfg.XLEN-104]};
-      4'b1110: data_tmp = {data[CVA6Cfg.XLEN-113:0], data[CVA6Cfg.XLEN-1:CVA6Cfg.XLEN-112]};
-      4'b1111: data_tmp = {data[CVA6Cfg.XLEN-121:0], data[CVA6Cfg.XLEN-1:CVA6Cfg.XLEN-120]};
+      default:
+      if (CVA6Cfg.IS_XLEN64 || CVA6Cfg.IS_XLEN128) begin
+        case (addr_tmp)
+          4'b0100:
+          data_tmp[CVA6Cfg.XLEN-1:0] = {
+            data[CVA6Cfg.XLEN-33:0], data[CVA6Cfg.XLEN-1:CVA6Cfg.XLEN-32]
+          };
+          4'b0101:
+          data_tmp[CVA6Cfg.XLEN-1:0] = {
+            data[CVA6Cfg.XLEN-41:0], data[CVA6Cfg.XLEN-1:CVA6Cfg.XLEN-40]
+          };
+          4'b0110:
+          data_tmp[CVA6Cfg.XLEN-1:0] = {
+            data[CVA6Cfg.XLEN-49:0], data[CVA6Cfg.XLEN-1:CVA6Cfg.XLEN-48]
+          };
+          4'b0111:
+          data_tmp[CVA6Cfg.XLEN-1:0] = {
+            data[CVA6Cfg.XLEN-57:0], data[CVA6Cfg.XLEN-1:CVA6Cfg.XLEN-56]
+          };
+          default:
+          if (CVA6Cfg.IS_XLEN128) begin
+            case (addr_tmp)
+              4'b1000: data_tmp = {data[CVA6Cfg.XLEN-65:0], data[CVA6Cfg.XLEN-1:CVA6Cfg.XLEN-64]};
+              4'b1001: data_tmp = {data[CVA6Cfg.XLEN-73:0], data[CVA6Cfg.XLEN-1:CVA6Cfg.XLEN-72]};
+              4'b1010: data_tmp = {data[CVA6Cfg.XLEN-81:0], data[CVA6Cfg.XLEN-1:CVA6Cfg.XLEN-80]};
+              4'b1011: data_tmp = {data[CVA6Cfg.XLEN-89:0], data[CVA6Cfg.XLEN-1:CVA6Cfg.XLEN-88]};
+              4'b1100: data_tmp = {data[CVA6Cfg.XLEN-97:0], data[CVA6Cfg.XLEN-1:CVA6Cfg.XLEN-96]};
+              4'b1101: data_tmp = {data[CVA6Cfg.XLEN-105:0], data[CVA6Cfg.XLEN-1:CVA6Cfg.XLEN-104]};
+              4'b1110: data_tmp = {data[CVA6Cfg.XLEN-113:0], data[CVA6Cfg.XLEN-1:CVA6Cfg.XLEN-112]};
+              4'b1111: data_tmp = {data[CVA6Cfg.XLEN-121:0], data[CVA6Cfg.XLEN-1:CVA6Cfg.XLEN-120]};
+            endcase
+          end
+        endcase
+      end
+
+
     endcase
     return data_tmp[CVA6Cfg.XLEN-1:0];
   endfunction

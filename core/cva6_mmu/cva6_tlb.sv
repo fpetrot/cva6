@@ -91,7 +91,7 @@ module cva6_tlb
   logic [TLB_ENTRIES-1:0][CVA6Cfg.PtLevels-2:0] is_page_o;
   logic [TLB_ENTRIES-1:0] match_stage;
   pte_cva6_t g_content;
-  logic [TLB_ENTRIES-1:0][(CVA6Cfg.GPPNW-1):0] gppn;
+  logic [TLB_ENTRIES-1:0][CVA6Cfg.GPPNW-1:0] gppn;
   logic [HYP_EXT*2:0] v_st_enbl;
 
   logic [TLB_ENTRIES-1:0] napot_tag_match;
@@ -225,7 +225,7 @@ module cva6_tlb
         if (CVA6Cfg.RVH) begin
           if (s_st_enbl_i) begin
             // S-stage Normal page
-            lu_gpaddr_o = {content_q[i].pte.ppn[(CVA6Cfg.GPPNW-1):0], lu_vaddr_i[11:0]};
+            lu_gpaddr_o = {content_q[i].pte.ppn[CVA6Cfg.GPPNW-1:0], lu_vaddr_i[11:0]};
             // S-stage Mega page
             if (tags_q[i].is_page[1][0])
               lu_gpaddr_o[12+(CVA6Cfg.VpnLen/CVA6Cfg.PtLevels)-1:12] = lu_vaddr_i[12+(CVA6Cfg.VpnLen/CVA6Cfg.PtLevels)-1:12];

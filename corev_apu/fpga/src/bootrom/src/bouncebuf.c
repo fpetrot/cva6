@@ -15,6 +15,7 @@
 #include "dma-mapping.h"
 #include "uart.h"
 #include "bootrom_errno.h"
+#include <stdint.h>
 #include <string.h>
 
 // void flush_dcache_range(unsigned long start, unsigned long end)
@@ -42,7 +43,7 @@ static int addr_aligned(struct bounce_buffer *state)
 	/* Check if start is aligned */
 	if ((unsigned long)state->user_buffer & align_mask) {
 		print_uart("Unaligned buffer address ");
-		print_uart_int(state->user_buffer);
+		print_uart_int((uint32_t)state->user_buffer);
 		print_uart("align mask");
 		print_uart_int(align_mask);
 		print_uart("(unsigned long)state->user_buffer & align_mask");
