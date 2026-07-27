@@ -1410,7 +1410,7 @@ module decoder
             if (CVA6Cfg.IS_XLEN64 || CVA6Cfg.IS_XLEN128) instruction_o.op = ariane_pkg::LWU;
             else illegal_instr = 1'b1;
             3'b011:
-            if (CVA6Cfg.IS_XLEN64) instruction_o.op = ariane_pkg::LD;
+            if (CVA6Cfg.IS_XLEN64 || CVA6Cfg.IS_XLEN128) instruction_o.op = ariane_pkg::LD;
             else illegal_instr = 1'b1;
             3'b111:
             if (CVA6Cfg.IS_XLEN128) instruction_o.op = ariane_pkg::LDU;
