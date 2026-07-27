@@ -725,7 +725,7 @@ end
 
 logic [1:0]    axi_adapter_size;
 
-assign axi_adapter_size = CVA6Cfg.IS_XLEN64 ? 2'b11 : 2'b10;
+assign axi_adapter_size = (CVA6Cfg.IS_XLEN128 || CVA6Cfg.IS_XLEN64) ? 2'b11 : 2'b10;
 
 axi_adapter #(
     .CVA6Cfg               ( CVA6Cfg                  ),
