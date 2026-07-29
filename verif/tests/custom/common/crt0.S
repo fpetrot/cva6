@@ -268,12 +268,12 @@ _exit:
 
 # Alignment is 2**7 == 128 bytes
 .section ".tohost","aw",@progbits
-.align 6
+.align 7
 .globl tohost
-tohost: .dword 0
-.align 6
+tohost: .octa 0
+.align 7
 .globl fromhost
-fromhost: .dword 0
+fromhost: .octa 0
 
 .section ".uvmif","aw",@progbits
 .align 6
