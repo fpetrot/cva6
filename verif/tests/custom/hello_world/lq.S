@@ -5,16 +5,15 @@
 # Authors       : Vincent Verdillon
 # Creation Date : July, 2026
 # Description   : Compose file for CVA6 128 bits docker environment
-# History       :
 
-#*****************************************************************************
+#-----------------------------------------------------------------------------
 # add.S
 #-----------------------------------------------------------------------------
-#
+
   .text
   .globl main
 main:
-  lq t4, mem_var
+  lq t0, mem_var
 
   li a0, 0x0
 
