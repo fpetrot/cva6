@@ -109,6 +109,29 @@ test_remuw.S
 test_remw.S
 )
 
+# If test files are not found, exit with error
+for test in "${test_list_i[@]}"; do
+    if [ ! -f "$test_list_i_path/$test" ]; then
+        echo "Error: Test file $test_list_i_path/$test not found"
+        echo "Run 'verif/tests/custom/gen-rv128-test.py' to generate the test files."
+
+        cd verif/tests/custom/
+        python3 gen-rv128-test.py
+        cd ../../
+    fi
+done
+
+for test in "${test_list_m[@]}"; do
+    if [ ! -f "$test_list_m_path/$test" ]; then
+        echo "Error: Test file $test_list_m_path/$test not found"
+        echo "Run 'verif/tests/custom/gen-rv128-test.py' to generate the test files."
+
+        cd verif/tests/custom/
+        python3 gen-rv128-test.py
+        cd ../../
+    fi
+done
+
 srcA=(
     $(realpath "verif/tests/custom/common/crt0.S")
 )
