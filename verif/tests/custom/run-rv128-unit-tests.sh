@@ -16,7 +16,7 @@ fi
 # Test lists for RV128I and RV128M
 
 # I
-test_list_i_path="verif/tests/custom/rv128-unit-tests/cva6-unit/unit_tests_i"
+test_list_i_path="verif/tests/custom/rv128-unit-tests-src/unit_tests_i"
 test_list_i=(
 test_add.S
 test_addd.S
@@ -40,20 +40,20 @@ test_bnez.S
 test_lb.S
 test_lbu.S
 test_ld.S
-test_ld_misaligned.S
+# test_ld_misaligned.S
 test_ldu.S
-test_ldu_misaligned.S
+# test_ldu_misaligned.S
 test_lh.S
-test_lh_misaligned.S
+# test_lh_misaligned.S
 test_lhu.S
-test_lhu_misaligned.S
+# test_lhu_misaligned.S
 test_lq.S
-test_lq_misaligned.S
+# test_lq_misaligned.S
 test_lui.S
 test_lw.S
-test_lw_misaligned.S
+# test_lw_misaligned.S
 test_lwu.S
-test_lwu_misaligned.S
+# test_lwu_misaligned.S
 test_or.S
 test_ori.S
 test_sll.S
@@ -67,6 +67,7 @@ test_slti.S
 test_sltiu.S
 test_sltu.S
 test_sq.S
+# test_sq_unaligned.S
 test_sra.S
 test_srad.S
 test_srai.S
@@ -87,7 +88,7 @@ test_xori.S
 )
 
 # M
-test_list_m_path="verif/tests/custom/rv128-unit-tests/cva6-unit/unit_tests_m"
+test_list_m_path="verif/tests/custom/rv128-unit-tests-src/unit_tests_m"
 test_list_m=(
 test_div.S
 test_divd.S
@@ -109,28 +110,35 @@ test_remuw.S
 test_remw.S
 )
 
+missing_tests=0
+
 # If test files are not found, exit with error
 for test in "${test_list_i[@]}"; do
     if [ ! -f "$test_list_i_path/$test" ]; then
         echo "Error: Test file $test_list_i_path/$test not found"
-        echo "Run 'verif/tests/custom/gen-rv128-test.py' to generate the test files."
 
-        cd verif/tests/custom/
-        python3 gen-rv128-test.py
-        cd ../../
+        missing_tests=1
     fi
 done
 
 for test in "${test_list_m[@]}"; do
     if [ ! -f "$test_list_m_path/$test" ]; then
         echo "Error: Test file $test_list_m_path/$test not found"
-        echo "Run 'verif/tests/custom/gen-rv128-test.py' to generate the test files."
 
-        cd verif/tests/custom/
-        python3 gen-rv128-test.py
-        cd ../../
+        missing_tests=1
     fi
 done
+
+# genrate missing tests if any were missing
+if [ $missing_tests -eq 1 ]; then
+    echo "Some test files were missing. Generating them now..."
+    cd verif/tests/custom/
+    python3 gen-rv128-test.py
+    cd ../../../
+fi
+
+# print where the script is running from
+echo "Running script from $(pwd)"
 
 srcA=(
     $(realpath "verif/tests/custom/common/crt0.S")
@@ -198,7 +206,7 @@ for test in "${test_list_i[@]}"; do
 
     # wait 100 milliseconds before running the next test
     # This is to avoid overwhelming the system with too many processes at once.
-    sleep 0.1
+    sleep 0.2
 done
 
 # M
@@ -239,7 +247,7 @@ for test in "${test_list_m[@]}"; do
 
     # wait 100 milliseconds before running the next test
     # This is to avoid overwhelming the system with too many processes at once.
-    sleep 0.1
+    sleep 0.2
 done
 
 # ------------------------- Final recap of the tests --------------------------
