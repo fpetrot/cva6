@@ -167,10 +167,10 @@ module alu
 
   assign shift_amt = operand_b;
 
-  assign shift_left = (fu_data_i.operation == SLL) | (CVA6Cfg.IS_XLEN64 && fu_data_i.operation == SLLW)
+  assign shift_left = (fu_data_i.operation == SLL) | ((CVA6Cfg.IS_XLEN64 || CVA6Cfg.IS_XLEN128) && fu_data_i.operation == SLLW)
                                                    | (CVA6Cfg.IS_XLEN128 && fu_data_i.operation == SLLD);
 
-  assign shift_arithmetic = (fu_data_i.operation == SRA) | (CVA6Cfg.IS_XLEN64 && fu_data_i.operation == SRAW)
+  assign shift_arithmetic = (fu_data_i.operation == SRA) | ((CVA6Cfg.IS_XLEN64 || CVA6Cfg.IS_XLEN128) && fu_data_i.operation == SRAW)
                                                          | (CVA6Cfg.IS_XLEN128 && fu_data_i.operation == SRAD);
   // right shifts, we let the synthesizer optimize this
   logic [CVA6Cfg.XLEN:0] shift_op_a_128;
@@ -183,7 +183,7 @@ module alu
   assign shift_op_a64         = shift_left ? operand_a_rev64 : operand_a[63:0];
 
   assign shift_op_a_128       = {shift_arithmetic & shift_op_a[CVA6Cfg.XLEN-1], shift_op_a};
-  assign shift_op_a_64        = {shift_arithmetic & shift_op_a[63], shift_op_a};
+  assign shift_op_a_64        = {shift_arithmetic & shift_op_a[63], shift_op_a64};
   assign shift_op_a_32        = {shift_arithmetic & shift_op_a[31], shift_op_a32};
 
   assign shift_right_result   = $unsigned($signed(shift_op_a_128) >>> shift_amt[6:0]);
@@ -354,6 +354,7 @@ module alu
         // Shifts 32 bit
         SLLW, SRLW, SRAW:
         result_o = {{CVA6Cfg.XLEN - 32{shift_result32[31]}}, shift_result32[31:0]};
+        // Shifts 64 bit
         SLLD, SRLD, SRAD:
         result_o = {{CVA6Cfg.XLEN - 64{shift_result64[63]}}, shift_result64[63:0]};
         default: ;
@@ -436,7 +437,7 @@ module alu
         REV8: result_o = rev8w_result;
 
         default:
-        if (fu_data_i.operation == SLLIUW && CVA6Cfg.IS_XLEN64)
+        if (fu_data_i.operation == SLLIUW && (CVA6Cfg.IS_XLEN128 || CVA6Cfg.IS_XLEN64))
           result_o = {{CVA6Cfg.XLEN-32{1'b0}}, operand_a[31:0]} << operand_b[5:0];  // Left Shift 32 bit unsigned
       endcase
     end
