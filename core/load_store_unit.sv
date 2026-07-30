@@ -363,7 +363,7 @@ module load_store_unit
     assign dcache_req_ports_o[0].data_wdata    = '0;
     assign dcache_req_ports_o[0].data_req      = 1'b0;
     assign dcache_req_ports_o[0].data_be       = '1;
-    assign dcache_req_ports_o[0].data_size     = 2'b11;
+    assign dcache_req_ports_o[0].data_size     = 3'b011;
     assign dcache_req_ports_o[0].data_we       = 1'b0;
     assign dcache_req_ports_o[0].data_wuser    = '0;
     assign dcache_req_ports_o[0].kill_req      = '0;

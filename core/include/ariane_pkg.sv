@@ -904,7 +904,7 @@ package ariane_pkg;
   // ----------------------
   // Extract Bytes from Op
   // ----------------------
-  function automatic logic [1:0] extract_transfer_size(fu_op op);
+  function automatic logic [2:0] extract_transfer_size(fu_op op);
     case (op)
       LQ, SQ:                                               return 3'b100;
       LD, LDU, HLV_D, SD, HSV_D, FLD, FSD,

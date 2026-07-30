@@ -83,7 +83,7 @@ module cache_ctrl
     logic [CVA6Cfg.DCACHE_TAG_WIDTH-1:0]   tag;
     logic [CVA6Cfg.DcacheIdWidth-1:0]      id;
     logic [(CVA6Cfg.XLEN/8)-1:0]           be;
-    logic [1:0]                            size;
+    logic [2:0]                            size;
     logic                                  we;
     logic [CVA6Cfg.XLEN-1:0]               wdata;
     logic                                  bypass;

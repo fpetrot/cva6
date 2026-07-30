@@ -208,7 +208,7 @@ module cva6
       logic                                  data_req;
       logic                                  data_we;
       logic [(CVA6Cfg.XLEN/8)-1:0]           data_be;
-      logic [1:0]                            data_size;
+      logic [2:0]                            data_size;
       logic [CVA6Cfg.DcacheIdWidth-1:0]      data_id;
       logic                                  kill_req;
       logic                                  tag_valid;
