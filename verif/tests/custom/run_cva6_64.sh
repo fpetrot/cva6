@@ -47,7 +47,7 @@ carch=(
     -mabi=lp64d
 )
 
-cd verif/simS
+cd verif/sim
 
 # Run the CVA6 simulation with the specified parameters.
 # It works only if the script is executed from the root of the project.
