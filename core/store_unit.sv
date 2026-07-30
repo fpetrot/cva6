@@ -169,7 +169,7 @@ module store_unit
   // keep the data and the byte enable for the second cycle (after address translation)
   logic [CVA6Cfg.XLEN-1:0] st_data_n, st_data_q;
   logic [(CVA6Cfg.XLEN/8)-1:0] st_be_n, st_be_q;
-  logic [1:0] st_data_size_n, st_data_size_q;
+  logic [2:0] st_data_size_n, st_data_size_q;
   amo_t amo_op_d, amo_op_q;
   cbo_t cbo_op_d, cbo_op_q;
 

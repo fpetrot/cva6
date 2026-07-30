@@ -28,7 +28,7 @@ package build_config_pkg;
 
     // MMU
     int unsigned VpnLen = IS_XLEN64 ? (CVA6Cfg.RVH ? 29 : 27) : 20;
-    int unsigned PtLevels = IS_XLEN64 ? 3 : 2;
+    int unsigned PtLevels = (IS_XLEN128 || IS_XLEN64) ? 3 : 2;
 
     config_pkg::cva6_cfg_t cfg;
 

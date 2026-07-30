@@ -26,7 +26,7 @@ module amo_buffer #(
     input ariane_pkg::amo_t amo_op_i,  // AMO Operation
     input  logic [CVA6Cfg.PLEN-1:0]      paddr_i,            // physical address of store which needs to be placed in the queue
     input logic [CVA6Cfg.XLEN-1:0] data_i,  // data which is placed in the queue
-    input logic [1:0] data_size_i,  // type of request we are making (e.g.: bytes to write)
+    input logic [2:0] data_size_i,  // type of request we are making (e.g.: bytes to write)
     // D$
     output ariane_pkg::amo_req_t amo_req_o,  // request to cache subsystem
     input ariane_pkg::amo_resp_t amo_resp_i,  // response from cache subsystem

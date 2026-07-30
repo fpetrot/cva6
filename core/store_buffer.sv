@@ -45,7 +45,7 @@ module store_buffer
     output logic [CVA6Cfg.PLEN-1:0] rvfi_mem_paddr_o,
     input logic [CVA6Cfg.XLEN-1:0] data_i,  // data which is placed in the queue
     input logic [(CVA6Cfg.XLEN/8)-1:0] be_i,  // byte enable in
-    input logic [1:0] data_size_i,  // type of request we are making (e.g.: bytes to write)
+    input logic [2:0] data_size_i,  // type of request we are making (e.g.: bytes to write)
     input cbo_t cbo_op_i,  // type of cache block operation
 
     // D$ interface
@@ -60,7 +60,7 @@ module store_buffer
     logic [CVA6Cfg.PLEN-1:0] address;
     logic [CVA6Cfg.XLEN-1:0] data;
     logic [(CVA6Cfg.XLEN/8)-1:0] be;
-    logic [1:0] data_size;
+    logic [2:0] data_size;
     cbo_t cbo_op;
     logic valid;  // this entry is valid, we need this for checking if the address offset matches
     logic wait_rvalid;  // need to wait for rvalid...

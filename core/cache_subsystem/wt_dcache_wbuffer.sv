@@ -218,7 +218,7 @@ module wt_dcache_wbuffer
   assign is_ni = config_pkg::is_inside_nonidempotent_regions(
       CVA6Cfg,
       {
-        {64 - CVA6Cfg.DCACHE_TAG_WIDTH - CVA6Cfg.DCACHE_INDEX_WIDTH{1'b0}},
+        {128 - CVA6Cfg.DCACHE_TAG_WIDTH - CVA6Cfg.DCACHE_INDEX_WIDTH{1'b0}},
         req_port_i.address_tag,
         {CVA6Cfg.DCACHE_INDEX_WIDTH{1'b0}}
       }
