@@ -5,7 +5,7 @@ import re
 path_base_test = "rv128-unit-tests/unit"
 
 # destination path for CVA6 test files
-path_cva6_test = "rv128-unit-tests/cva6-unit"
+path_cva6_test = "rv128-unit-tests-src/"
 
 # paths to unit tests
 path_tests = [
@@ -119,12 +119,26 @@ for file in test_files:
             match_var = re.search(r"//prgchk var (\w+) == (.+)", line)
             match_reg_reg_eq = re.search(r"//prgchk gdb \$(\w+) == \$?(\w+)", line)
             # match e.g. //prgchk gdb ((unsigned long*) &tab_tst)[0] == 0x1234567890abcdef
-            match_gdb_var_eq = re.search(
-                r"//prgchk gdb \(\(unsigned long\*\) &(\w+)\)\[(\d+)\] == (.+)",
+            match_gdb_var_eq_0 = re.search(
+                r"//prgchk gdb \(\(unsigned long\s*\*\) &(\w+)\)\[(\d+)\] == (.+)",
                 line,
             )
-            match_gdb_var_neq = re.search(
-                r"//prgchk gdb \(\(unsigned long\*\) &(\w+)\)\[(\d+)\] != (.+)",
+            match_gdb_var_neq_1 = re.search(
+                r"//prgchk gdb \(\(unsigned long\s*\*\) &(\w+)\)\[(\d+)\] != (.+)",
+                line,
+            )
+            # match e.g. //prgchk gdb (unsigned long long *)store == 0xabcd12346321dcba7412589633698521
+            match_gdb_var_eq_1 = re.search(
+                r"//prgchk gdb \(unsigned long long \*\)(\w+) == (.+)", line
+            )
+            # match e.g. //prgchk gdb ((unsigned long long*) &tab_tst)[0] == 0x11111111111111111111111111111111
+            match_gdb_var_eq_2 = re.search(
+                r"//prgchk gdb \(\(unsigned long long\s*\*\) &(\w+)\)\[(\d+)\] == (.+)",
+                line,
+            )
+            # match e.g. //prgchk gdb ((unsigned long long *) &bigtabmain)[0] != 0xdeadbeefcafebabe1234567890abcdef
+            match_gdb_var_neq_2 = re.search(
+                r"//prgchk gdb \(\(unsigned long long\s*\*\) &(\w+)\)\[(\d+)\] != (.+)",
                 line,
             )
 
@@ -136,6 +150,7 @@ for file in test_files:
                     f"    CHK_REG_EQ_VALUE({reg}, {expected_value}, {error_id})\n"
                 )
                 new_lines.append(new_line)
+
             elif match_reg_value_neq:
                 reg = match_reg_value_neq.group(1)
                 expected_value = match_reg_value_neq.group(2)
@@ -144,9 +159,11 @@ for file in test_files:
                     f"    CHK_REG_NEQ_VALUE({reg}, {expected_value}, {error_id})\n"
                 )
                 new_lines.append(new_line)
+
             elif match_error:
                 new_line = f"    RAISE_ERROR({error_id})\n"
                 new_lines.append(new_line)
+
             elif match_var:
                 var = match_var.group(1)
                 expected_value = match_var.group(2)
@@ -164,43 +181,99 @@ for file in test_files:
                     )
 
                 new_lines.append(new_line)
+
             elif match_reg_reg_eq:
                 reg1 = match_reg_reg_eq.group(1)
                 reg2 = match_reg_reg_eq.group(2)
                 new_line = f"    CHK_EQ_REG_REG({reg1}, {reg2}, {error_id})\n"
                 new_lines.append(new_line)
-            elif match_gdb_var_eq:
-                var = match_gdb_var_eq.group(1)
-                index = match_gdb_var_eq.group(2)
-                expected_value = match_gdb_var_eq.group(3)
+
+            elif match_gdb_var_eq_0:
+                var = match_gdb_var_eq_0.group(1)
+                index = match_gdb_var_eq_0.group(2)
+                expected_value = match_gdb_var_eq_0.group(3)
 
                 if expected_value.startswith("0x"):
                     if len(expected_value) > 18:
-                        new_line = f"    CHK_EQ_MEM_VALUE_Q({var} + {index} * 8, {expected_value}, {error_id})\n"
+                        new_line = f"    CHK_EQ_MEM_VALUE_Q({var} + {index} * 16, {expected_value}, {error_id})\n"
                     elif len(expected_value) > 10:
-                        new_line = f"    CHK_EQ_MEM_VALUE_D({var} + {index} * 4, {expected_value}, {error_id})\n"
+                        new_line = f"    CHK_EQ_MEM_VALUE_D({var} + {index} * 8, {expected_value}, {error_id})\n"
                     else:
                         new_line = f"    CHK_EQ_MEM_VALUE_W({var} + {index} * 4, {expected_value}, {error_id})\n"
                 else:
                     new_line = f"    CHK_EQ_MEM_VALUE_W({var} + {index} * 4, {expected_value}, {error_id})\n"
 
                 new_lines.append(new_line)
-            elif match_gdb_var_neq:
-                var = match_gdb_var_neq.group(1)
-                index = match_gdb_var_neq.group(2)
-                expected_value = match_gdb_var_neq.group(3)
+
+            elif match_gdb_var_neq_1:
+                var = match_gdb_var_neq_1.group(1)
+                index = match_gdb_var_neq_1.group(2)
+                expected_value = match_gdb_var_neq_1.group(3)
 
                 if expected_value.startswith("0x"):
                     if len(expected_value) > 18:
-                        new_line = f"    CHK_NEQ_MEM_VALUE_Q({var} + {index} * 8, {expected_value}, {error_id})\n"
+                        new_line = f"    CHK_NEQ_MEM_VALUE_Q({var} + {index} * 16, {expected_value}, {error_id})\n"
                     elif len(expected_value) > 10:
-                        new_line = f"    CHK_NEQ_MEM_VALUE_D({var} + {index} * 4, {expected_value}, {error_id})\n"
+                        new_line = f"    CHK_NEQ_MEM_VALUE_D({var} + {index} * 8, {expected_value}, {error_id})\n"
                     else:
                         new_line = f"    CHK_NEQ_MEM_VALUE_W({var} + {index} * 4, {expected_value}, {error_id})\n"
                 else:
                     new_line = f"    CHK_NEQ_MEM_VALUE_W({var} + {index} * 4, {expected_value}, {error_id})\n"
 
                 new_lines.append(new_line)
+
+            elif match_gdb_var_eq_1:
+                var = match_gdb_var_eq_1.group(1)
+                expected_value = match_gdb_var_eq_1.group(2)
+
+                if expected_value.startswith("0x"):
+                    if len(expected_value) > 18:
+                        new_line = f"    CHK_EQ_MEM_VALUE_Q({var}, {expected_value}, {error_id})\n"
+                    elif len(expected_value) > 10:
+                        new_line = f"    CHK_EQ_MEM_VALUE_D({var}, {expected_value}, {error_id})\n"
+                    else:
+                        new_line = f"    CHK_EQ_MEM_VALUE_W({var}, {expected_value}, {error_id})\n"
+                else:
+                    new_line = (
+                        f"    CHK_EQ_MEM_VALUE_W({var}, {expected_value}, {error_id})\n"
+                    )
+
+                new_lines.append(new_line)
+
+            elif match_gdb_var_eq_2:
+                var = match_gdb_var_eq_2.group(1)
+                index = match_gdb_var_eq_2.group(2)
+                expected_value = match_gdb_var_eq_2.group(3)
+
+                if expected_value.startswith("0x"):
+                    if len(expected_value) > 18:
+                        new_line = f"    CHK_EQ_MEM_VALUE_Q({var} + {index} * 16, {expected_value}, {error_id})\n"
+                    elif len(expected_value) > 10:
+                        new_line = f"    CHK_EQ_MEM_VALUE_D({var} + {index} * 8, {expected_value}, {error_id})\n"
+                    else:
+                        new_line = f"    CHK_EQ_MEM_VALUE_W({var} + {index} * 4, {expected_value}, {error_id})\n"
+                else:
+                    new_line = f"    CHK_EQ_MEM_VALUE_W({var} + {index} * 4, {expected_value}, {error_id})\n"
+
+                new_lines.append(new_line)
+
+            elif match_gdb_var_neq_2:
+                var = match_gdb_var_neq_2.group(1)
+                index = match_gdb_var_neq_2.group(2)
+                expected_value = match_gdb_var_neq_2.group(3)
+
+                if expected_value.startswith("0x"):
+                    if len(expected_value) > 18:
+                        new_line = f"    CHK_NEQ_MEM_VALUE_Q({var} + {index} * 16, {expected_value}, {error_id})\n"
+                    elif len(expected_value) > 10:
+                        new_line = f"    CHK_NEQ_MEM_VALUE_D({var} + {index} * 8, {expected_value}, {error_id})\n"
+                    else:
+                        new_line = f"    CHK_NEQ_MEM_VALUE_W({var} + {index} * 4, {expected_value}, {error_id})\n"
+                else:
+                    new_line = f"    CHK_NEQ_MEM_VALUE_W({var} + {index} * 4, {expected_value}, {error_id})\n"
+
+                new_lines.append(new_line)
+
             else:
                 # panic
                 raise Exception(f"Unknown prgchk line: {line}")
