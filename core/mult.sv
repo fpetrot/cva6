@@ -80,8 +80,10 @@ module mult
 
   logic                    div_signed;  // signed or unsigned division
   logic                    rem;  // is it a reminder (or not a reminder e.g.: a division)
-  logic word_op_d, word_op_q;  // save whether the operation was signed or not
-  logic word, double;  // help to reduce line sizes
+  logic word_op_d, word_op_q;  // save whether the operation was 32bit signed or not
+  logic double_op_d, double_op_q;  // save whether the operation was 64bit signed or not
+
+  logic is_word_op, is_double_op;  // differentiate operations on words and operations on doubles
 
   // is this a signed op?
   assign div_signed = fu_data_i.operation inside {DIV, DIVW, DIVD, REM, REMW, REMD};
@@ -89,39 +91,56 @@ module mult
   assign rem = fu_data_i.operation inside {REM, REMU, REMW, REMUW, REMD, REMUD};
 
   // is this a word or double word operation?
-  assign word = ((CVA6Cfg.IS_XLEN64 || CVA6Cfg.IS_XLEN128) && (fu_data_i.operation inside {DIVW, DIVUW, REMW, REMUW}));
-  assign double = (CVA6Cfg.IS_XLEN128 && (fu_data_i.operation inside {DIVD, DIVUD, REMD, REMUD}));
+  assign is_word_op = ((CVA6Cfg.IS_XLEN64 || CVA6Cfg.IS_XLEN128) && (fu_data_i.operation inside {DIVW, DIVUW, REMW, REMUW}));
+  assign is_double_op = (CVA6Cfg.IS_XLEN128 && (fu_data_i.operation inside {DIVD, DIVUD, REMD, REMUD}));
 
   // prepare the input operands and control divider
   always_comb begin
     // silence the inputs
-    operand_a = '0;
-    operand_b = '0;
+    operand_a   = '0;
+    operand_b   = '0;
     // control signals
-    word_op_d = word_op_q;
+    word_op_d   = word_op_q;
+    double_op_d = double_op_q;
 
     // we've go a new division operation
     if (mult_valid_i && fu_data_i.operation inside {DIV, DIVU, DIVW, DIVUW, DIVD, DIVUD, REM, REMU, REMW, REMUW, REMD, REMUD}) begin
       // is this a word operation?
-      if (word || double) begin
+      if (is_word_op) begin
         // yes so check if we should sign extend this is only done for a signed operation
         if (div_signed) begin
-          operand_a = word ? {{CVA6Cfg.XLEN-32{fu_data_i.operand_a[31]}}, fu_data_i.operand_a[31:0]} : sext64to128(
-              fu_data_i.operand_a[63:0]);
-          operand_b = word ? {{CVA6Cfg.XLEN-32{fu_data_i.operand_b[31]}}, fu_data_i.operand_b[31:0]} : sext64to128(
-              fu_data_i.operand_b[63:0]);
+          operand_a = sext32to128(fu_data_i.operand_a[31:0]);
+          operand_b = sext32to128(fu_data_i.operand_b[31:0]);
         end else begin
-          operand_a = word ? fu_data_i.operand_a[31:0] : fu_data_i.operand_a[63:0];
-          operand_b = word ? fu_data_i.operand_b[31:0] : fu_data_i.operand_b[63:0];
+          operand_a = fu_data_i.operand_a[31:0];
+          operand_b = fu_data_i.operand_b[31:0];
         end
 
         // save whether we want sign extend the result or not, this is done for all word operations
-        word_op_d = 1'b1;
+        word_op_d   = 1'b1;
+        double_op_d = 1'b0;
+
+        // is this a double operation?
+      end else if (is_double_op) begin
+        // yes so check if we should sign extend this is only done for a signed operation
+        if (div_signed) begin
+          operand_a = sext64to128(fu_data_i.operand_a[63:0]);
+          operand_b = sext64to128(fu_data_i.operand_b[63:0]);
+        end else begin
+          operand_a = fu_data_i.operand_a[63:0];
+          operand_b = fu_data_i.operand_b[63:0];
+        end
+
+        // save whether we want sign extend the result or not, this is done for all word operations
+        word_op_d   = 1'b0;
+        double_op_d = 1'b1;
       end else begin
         // regular op
-        operand_a = fu_data_i.operand_a;
-        operand_b = fu_data_i.operand_b;
-        word_op_d = 1'b0;
+        operand_a   = fu_data_i.operand_a;
+        operand_b   = fu_data_i.operand_b;
+
+        word_op_d   = 1'b0;
+        double_op_d = 1'b0;
       end
     end
   end
@@ -150,9 +169,9 @@ module mult
 
   // Result multiplexer
   // if it was a signed word operation the bit will be set and the result will be sign extended accordingly
-  assign div_result = (CVA6Cfg.IS_XLEN128 && word_op_q) ? sext64to128(
+  assign div_result = (CVA6Cfg.IS_XLEN128 && double_op_q) ? sext64to128(
       result[63:0]
-  ) : (CVA6Cfg.IS_XLEN64 && word_op_q) ? sext32to64(
+  ) : ((CVA6Cfg.IS_XLEN64 || CVA6Cfg.IS_XLEN128) && word_op_q) ? sext32to128(
       result[31:0]
   ) : result;
 
@@ -161,9 +180,11 @@ module mult
   // ---------------------
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if (~rst_ni) begin
-      word_op_q <= '0;
+      word_op_q   <= '0;
+      double_op_q <= '0;
     end else begin
-      word_op_q <= word_op_d;
+      word_op_q   <= word_op_d;
+      double_op_q <= double_op_d;
     end
   end
 endmodule
