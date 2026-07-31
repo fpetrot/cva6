@@ -399,14 +399,24 @@ done_processing:
 
     std::cerr << "ELF architecture is not recognized as 32-bit or 64-bit, using binary format.\n";
 
-      const char* objcopy_env = getenv("RISCV_OBJCOPY");
+    const char* objcopy_env = getenv("RISCV_OBJCOPY");
+
     if (!objcopy_env) {
         std::cerr << "RISCV_OBJCOPY environment variable is not set. Please set it to the path of the riscv64-unknown-elf-objcopy binary.\n";
         return 1;
     }
+
     std::string objcopy = objcopy_env;
     if (objcopy.empty()) {
         std::cerr << "RISCV_OBJCOPY environment variable is set but empty.\n";
+        return 1;
+    }
+
+    // check if objcopy end with "objcopy" or "riscv64-unknown-elf-objcopy"
+    if (objcopy.find("objcopy") == std::string::npos) {
+        std::cerr << "RISCV_OBJCOPY environment variable does not point to a valid objcopy binary.\n";
+        std::cerr << "RISCV_OBJCOPY=" << objcopy << "\n";
+        std::cerr << "You should relaunch the simulation.\n";
         return 1;
     }
 
